@@ -1,0 +1,8 @@
+Proc_Get_Visiting_Faculty_details
+Proc_Get_Maximum_Visiting_Faculty_Code
+Proc_Save_Visiting_Faculty
+
+
+update emph set ExitFlag='N'
+insert into deptmst(dept_id,dept_name,cost_code) select 100,'VISITING','NIT'
+

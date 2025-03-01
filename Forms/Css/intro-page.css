@@ -1,0 +1,12 @@
+*{ margin: 0 auto; padding: 0; }
+img{ border:none;}
+body{ background: url(../Images/intro.jpg) no-repeat center center fixed; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; font-family: "Trebuchet MS" ;}
+.int-menu{ width:343px; margin:0 auto; padding:0;}
+.int-menu-top{ background:url(../Images/int-menu-top.png) no-repeat top center; width:347px; height:31px;}
+.int-menu-mid{ background:url(../Images/int-menu-mid.png) repeat-y; width:283px;padding:0 30px; text-align:center;}
+.int-menu-bot{ background:url(../Images/int-menu-bot.png) no-repeat; width:343px; height:30px;}
+.int-center{ background:#223a52 url(../Images/int-menu-inner.png) repeat-x; padding:15px;}
+.int-center a{ color:#fff; text-decoration:none; font-size:20px; font-weight:bold; padding-left:20px;}
+.finance{ background:url(../Images/menu-divi.png) no-repeat bottom center; padding-bottom:10px; margin-bottom:5px; text-align:center;}
+.college-name{ margin-top:15%; text-align:center; font-size:24px;text-transform:uppercase; color:#0b4278; line-height:30px; border-top-left-radius:15px; }
+.college-name span{ box-shadow:0px -1px 3px #999; background:#fff; padding:10px 80px; border-top-left-radius:25px;  border-top-right-radius:25px; }

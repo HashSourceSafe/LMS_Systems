@@ -1,0 +1,9 @@
+--USE Kalyani_Web_Erp_Db
+--USE NIT_WEB_ERP_DB
+--USE Surermath_Web_Erp_Db
+--USE GNIT_WEB_STF_DB
+GO
+
+
+
+Proc_Get_Faculty_Name

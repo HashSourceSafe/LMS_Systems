@@ -1,0 +1,113 @@
+For Dept
+========
+
+
+INSERT INTO DEPTMST(dept_id,dept_name,cost_code)
+select mms_dept_mst_nDeptId,mms_dept_mst_sDeptDesc,'JIS' 
+from JISD_PAYROLL_DB.dbo.MMS_DEPARTMENT_MASTER WHERE mms_dept_mst_nDeptId in(8,9)
+
+
+emph
+-----
+
+select * from emph where 
+emph_code in('GIT/0835','GIT/0816')
+
+select emp_sCode,emp_sName,2,emp_nDeptId from JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER where 
+emp_sCode in('GIT/0835','GIT/0816')
+
+
+INSERT INTO emph(emph_code,emph_name,college_id,emph_dept_id)
+select emp_sCode,emp_sName,college_id,emp_nDeptId from JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER 
+where emp_sCode in('GIT/0835','GIT/0816')
+
+----------------------------------------------------------
+
+
+select * from emph where emph_code  in(
+'GIT/0817'
+)
+
+
+INSERT INTO emph(emph_code,emph_name,college_id,emph_dept_id)
+select emp_sCode,emp_sName,2,emp_nDeptId from JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER where emp_nBrnId=8008 
+
+
+
+INSERT INTO emph(emph_code,emph_name,college_id,emph_dept_id)
+select emp_sCode,emp_sName,3,emp_nDeptId from JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER where emp_sCode in(
+'GIT/0810'
+)
+
+
+short name update
+-----------------
+update emph set emph_ShortName=LEFT(emph_name,1)+
+SUBSTRING(emph_name,CHARINDEX(' ',emph_name)+1,1)+
+case when CHARINDEX(' ',emph_name,CHARINDEX(' ',emph_name)+1)>0 then SUBSTRING(emph_name,CHARINDEX(' ',emph_name,CHARINDEX(' ',emph_name)+1)+1,1) else '' end
+where emph_ShortName is null
+
+
+
+update emph set emph_ShortName=LEFT(emph_name,1)+
+SUBSTRING(emph_name,CHARINDEX(' ',emph_name)+1,1)+
+case when CHARINDEX(' ',emph_name,CHARINDEX(' ',emph_name)+1)>0 then SUBSTRING(emph_name,CHARINDEX(' ',emph_name,CHARINDEX(' ',emph_name)+1)+1,1) else '' end
+where emph_code in(
+'GIT/0810'
+)
+
+==========================
+/*
+use nit_web_erp_db
+go
+select * from BACK_OFFICE_LOGINMST 
+*/
+
+select STD_SUBJECT_sSUBJECT_CODE,STD_SUBJECT_sSUBJECT_NAME,COUNT(*) as x
+from STD_SUBJECT_MASTER_NEW
+where STD_SUBJECT_sSUBJECT_COURSEID=7
+group by  STD_SUBJECT_sSUBJECT_CODE,STD_SUBJECT_sSUBJECT_NAME
+order by x desc
+--having COUNT(*) >1
+
+0
+1
+2
+3
+4
+5
+6
+7
+ 
+ 
+select * from STD_SUBJECT_MASTER_NEW where STD_SUBJECT_sSUBJECT_CODE in(
+select STD_SUBJECT_sSUBJECT_CODE
+from STD_SUBJECT_MASTER_NEW
+where STD_SUBJECT_sSUBJECT_COURSEID=7
+group by  STD_SUBJECT_sSUBJECT_CODE,STD_SUBJECT_sSUBJECT_NAME
+having COUNT(*) >1
+)
+order by STD_SUBJECT_sSUBJECT_CODE
+
+
+select * from STD_SUBJECT_MASTER_NEW where STD_SUBJECT_sSUBJECT_CODE='EE291'
+
+
+
+update emph set emph_desig=JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER_VIEW.desg_sdesc,
+emph_category=JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER_VIEW.catg_sDesc 
+from JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER_VIEW where 
+emph_code=JISD_PAYROLL_DB.dbo.SALARY_EMPLOYEE_MASTER_VIEW.emp_sCode
+ 
+select emph_desig 
+from emph 
+where emph_desig is not null
+group by emph_desig
+order by emph_desig
+
+
+
+update emph set emph_desig='Technical Assistant' where emph_desig in(
+'LAB ASSISTANT',
+'LAB. ASSIST.'
+)

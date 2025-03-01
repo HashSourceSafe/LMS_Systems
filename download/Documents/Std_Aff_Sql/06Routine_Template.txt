@@ -1,0 +1,40 @@
+frmCreateRoutineTemplate.aspx
+=============================
+
+Proc_Get_Group
+Proc_Get_Faculty
+Proc_Show_Routine_Template_Period_Vertical
+Proc_Get_Batch_Course_Stream_Sem_Wise_Subject
+
+VIEW_PERIOD_TIME_TABLE
+time_table_template_draft_view
+
+faculty table "emph"
+
+
+
+
+/*create dept with data*/
+CREATE TABLE [dbo].[deptmst](
+	[dept_id] [numeric](11, 0) NOT NULL,
+	[dept_name] [varchar](50) NULL,
+	[cost_code] [varchar](20) NOT NULL,
+	[ins_user] [varchar](10) NULL,
+	[ins_date] [datetime] NULL,
+	[upd_user] [varchar](10) NULL,
+	[upd_date] [datetime] NULL,
+	[del_user] [varchar](10) NULL,
+	[del_date] [datetime] NULL,
+	[mod_count] [numeric](11, 0) NULL,
+	[del_flag] [varchar](1) NULL,
+	[usr_type] [varchar](10) NULL,
+	[deptmst_loc] [char](15) NULL
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+
+

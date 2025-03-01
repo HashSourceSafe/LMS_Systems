@@ -1,0 +1,659 @@
+go
+GO
+
+/****** Object:  Table [dbo].[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD](
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nFacultyCode] [varchar](50) NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOADY_nKeyId] [numeric](18, 0) NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive] [int] NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId] [int] NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp] [varchar](200) NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink] [varchar](200) NULL,
+ CONSTRAINT [PK_TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_1] PRIMARY KEY CLUSTERED 
+(
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nFacultyCode] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOADY_nKeyId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_upload_resource_type]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_upload_resource_type](
+	[poco_upload_resource_type_nId] [int] NOT NULL,
+	[poco_upload_resource_type_sName] [varchar](50) NULL,
+	[poco_upload_resource_type_nIsUpload] [int] NULL,
+ CONSTRAINT [PK_poco_upload_resource_type] PRIMARY KEY CLUSTERED 
+(
+	[poco_upload_resource_type_nId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_subject_master_module_detail_for_batch]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[poco_subject_master_module_detail_for_batch](
+	[poco_subject_master_module_detail_for_batch_nBatchId] [int] NOT NULL,
+	[poco_subject_master_module_detail_for_batch_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_subject_master_module_detail_for_batch_nModuleId] [numeric](18, 0) NOT NULL,
+	[poco_subject_master_module_detail_for_batch_nSubModuleId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poco_subject_master_module_detail_for_batch_nSubModuleSl] [int] NULL,
+	[poco_subject_master_module_detail_for_batch_sTopic] [ntext] NULL,
+	[poco_subject_master_module_detail_for_batch_sDetails] [ntext] NULL,
+	[poco_subject_master_module_detail_for_batch_nClassCount] [int] NULL,
+	[poco_subject_master_module_detail_for_batch_nIsActive] [int] NULL,
+ CONSTRAINT [PK_poco_subject_master_module_detail_for_batch] PRIMARY KEY CLUSTERED 
+(
+	[poco_subject_master_module_detail_for_batch_nBatchId] ASC,
+	[poco_subject_master_module_detail_for_batch_nSubjectId] ASC,
+	[poco_subject_master_module_detail_for_batch_nModuleId] ASC,
+	[poco_subject_master_module_detail_for_batch_nSubModuleId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_module]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_module](
+	[poco_module_nId] [numeric](18, 0) NOT NULL,
+	[poco_module_sName] [varchar](50) NOT NULL,
+ CONSTRAINT [PK_poco_module] PRIMARY KEY CLUSTERED 
+(
+	[poco_module_nId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_subject_master_main_for_batch]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[poco_subject_master_main_for_batch](
+	[poco_subject_master_main_for_batch_nBatchId] [int] NOT NULL,
+	[poco_subject_master_main_for_batch_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_subject_master_main_for_batch_nLecture] [int] NULL,
+	[poco_subject_master_main_for_batch_nTutorial] [int] NULL,
+	[poco_subject_master_main_for_batch_nLab] [int] NULL,
+	[poco_subject_master_main_for_batch_nTotalContact] [int] NULL,
+	[poco_subject_master_main_for_batch_nCredit] [numeric](18, 2) NULL,
+ CONSTRAINT [PK_poco_subject_master_main_for_batch] PRIMARY KEY CLUSTERED 
+(
+	[poco_subject_master_main_for_batch_nBatchId] ASC,
+	[poco_subject_master_main_for_batch_nSubjectId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_subject_wise_attainment]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_subject_wise_attainment](
+	[poco_subject_wise_attainment_nBranchId] [int] NOT NULL,
+	[poco_subject_wise_attainment_nPeriodId] [int] NOT NULL,
+	[poco_subject_wise_attainment_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_attainment_nSl] [int] NOT NULL,
+	[poco_subject_wise_attainment_sType] [varchar](20) NOT NULL,
+	[poco_subject_wise_attainment_nCoPoId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_attainment_sDesp] [varchar](8000) NULL,
+	[poco_subject_wise_attainment_sAvg] [varchar](10) NULL,
+	[poco_subject_wise_attainment_s60] [varchar](10) NULL,
+	[poco_subject_wise_attainment_s40_60] [varchar](10) NULL,
+	[poco_subject_wise_attainment_s40] [varchar](10) NULL,
+	[poco_subject_wise_attainment_sLevel] [varchar](10) NULL,
+	[poco_subject_wise_attainment_sPoScale] [varchar](10) NULL,
+	[poco_subject_wise_attainment_sPoAttainment] [varchar](10) NULL,
+ CONSTRAINT [PK_poco_subject_wise_attainment] PRIMARY KEY CLUSTERED 
+(
+	[poco_subject_wise_attainment_nBranchId] ASC,
+	[poco_subject_wise_attainment_nPeriodId] ASC,
+	[poco_subject_wise_attainment_nSubjectId] ASC,
+	[poco_subject_wise_attainment_nSl] ASC,
+	[poco_subject_wise_attainment_sType] ASC,
+	[poco_subject_wise_attainment_nCoPoId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_subject_wise_co_po_mapping]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[poco_subject_wise_co_po_mapping](
+	[poco_subject_wise_co_po_mapping_nCollegeId] [int] NOT NULL,
+	[poco_subject_wise_co_po_mapping_nPeriodId] [int] NOT NULL,
+	[poco_subject_wise_co_po_mapping_nCourseId] [int] NOT NULL,
+	[poco_subject_wise_co_po_mapping_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_co_po_mapping_nCoId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_co_po_mapping_nPoId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_co_po_mapping_nScale] [numeric](18, 2) NULL,
+ CONSTRAINT [PK_poco_subject_wise_co_po_mapping_1] PRIMARY KEY CLUSTERED 
+(
+	[poco_subject_wise_co_po_mapping_nCollegeId] ASC,
+	[poco_subject_wise_co_po_mapping_nPeriodId] ASC,
+	[poco_subject_wise_co_po_mapping_nCourseId] ASC,
+	[poco_subject_wise_co_po_mapping_nSubjectId] ASC,
+	[poco_subject_wise_co_po_mapping_nCoId] ASC,
+	[poco_subject_wise_co_po_mapping_nPoId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_program_outcome]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_program_outcome](
+	[poco_program_outcome_nPeriod] [int] NOT NULL,
+	[poco_program_outcome_nCourseId] [int] NOT NULL,
+	[poco_program_outcome_nType] [int] NOT NULL,
+	[poco_program_outcome_nRowId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poco_program_outcome_sNo] [varchar](50) NOT NULL,
+	[poco_program_outcome_sDesp] [varchar](1000) NULL,
+	[poco_program_outcome_sDetails] [varchar](8000) NULL,
+ CONSTRAINT [PK_poco_program_outcome_1] PRIMARY KEY CLUSTERED 
+(
+	[poco_program_outcome_nPeriod] ASC,
+	[poco_program_outcome_nCourseId] ASC,
+	[poco_program_outcome_nType] ASC,
+	[poco_program_outcome_nRowId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_student_marks_detail]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_student_marks_detail](
+	[poco_student_marks_detail_nBranchId] [int] NOT NULL,
+	[poco_student_marks_detail_nPeriodId] [int] NOT NULL,
+	[poco_student_marks_detail_nCourseId] [int] NOT NULL,
+	[poco_student_marks_detail_nStreamId] [int] NOT NULL,
+	[poco_student_marks_detail_nExamMainId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_detail_nExamDetailId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_detail_nQuestionId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_detail_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_detail_nSemNo] [int] NOT NULL,
+	[poco_student_marks_detail_nStudentId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_detail_nMarks] [numeric](18, 2) NULL,
+	[poco_student_marks_detail_sGrade] [varchar](10) NULL,
+	[poco_student_marks_detail_sFlag] [varchar](10) NULL,
+ CONSTRAINT [PK_poco_student_marks_detail] PRIMARY KEY CLUSTERED 
+(
+	[poco_student_marks_detail_nBranchId] ASC,
+	[poco_student_marks_detail_nPeriodId] ASC,
+	[poco_student_marks_detail_nCourseId] ASC,
+	[poco_student_marks_detail_nStreamId] ASC,
+	[poco_student_marks_detail_nExamMainId] ASC,
+	[poco_student_marks_detail_nExamDetailId] ASC,
+	[poco_student_marks_detail_nQuestionId] ASC,
+	[poco_student_marks_detail_nSubjectId] ASC,
+	[poco_student_marks_detail_nSemNo] ASC,
+	[poco_student_marks_detail_nStudentId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_student_marks_main]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[poco_student_marks_main](
+	[poco_student_marks_main_nBranchId] [int] NOT NULL,
+	[poco_student_marks_main_nPeriodId] [int] NOT NULL,
+	[poco_student_marks_main_nCourseId] [int] NOT NULL,
+	[poco_student_marks_main_nStreamId] [int] NOT NULL,
+	[poco_student_marks_main_nExamMainId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_main_nExamDetailId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_main_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_main_nSemNo] [int] NOT NULL,
+	[poco_student_marks_main_nStudentId] [numeric](18, 0) NOT NULL,
+	[poco_student_marks_main_nFullMarks] [numeric](18, 2) NULL,
+	[poco_student_marks_main_nIsActive] [int] NULL,
+ CONSTRAINT [PK_poco_student_marks_main_1] PRIMARY KEY CLUSTERED 
+(
+	[poco_student_marks_main_nBranchId] ASC,
+	[poco_student_marks_main_nPeriodId] ASC,
+	[poco_student_marks_main_nCourseId] ASC,
+	[poco_student_marks_main_nStreamId] ASC,
+	[poco_student_marks_main_nExamMainId] ASC,
+	[poco_student_marks_main_nExamDetailId] ASC,
+	[poco_student_marks_main_nSubjectId] ASC,
+	[poco_student_marks_main_nSemNo] ASC,
+	[poco_student_marks_main_nStudentId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_exam_question_master]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_exam_question_master](
+	[poco_exam_question_master_nBranchId] [int] NOT NULL,
+	[poco_exam_question_master_nPeriodId] [int] NOT NULL,
+	[poco_exam_question_master_nCourseId] [int] NOT NULL,
+	[poco_exam_question_master_nExamMainId] [numeric](18, 0) NOT NULL,
+	[poco_exam_question_master_nExamDetailId] [numeric](18, 0) NOT NULL,
+	[poco_exam_question_master_nQuestionId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poco_exam_question_master_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_exam_question_master_nSemNo] [int] NOT NULL,
+	[poco_exam_question_master_sQuestionNo] [varchar](50) NULL,
+	[poco_exam_question_master_sQuestionDet] [varchar](8000) NULL,
+	[poco_exam_question_master_nCoId] [numeric](18, 0) NULL,
+	[poco_exam_question_master_nBloomId] [int] NULL,
+	[poco_exam_question_master_nMarks] [numeric](18, 0) NULL,
+	[poco_exam_question_master_nIsActive] [int] NULL,
+ CONSTRAINT [PK_poco_exam_question_master] PRIMARY KEY CLUSTERED 
+(
+	[poco_exam_question_master_nBranchId] ASC,
+	[poco_exam_question_master_nPeriodId] ASC,
+	[poco_exam_question_master_nCourseId] ASC,
+	[poco_exam_question_master_nExamMainId] ASC,
+	[poco_exam_question_master_nExamDetailId] ASC,
+	[poco_exam_question_master_nQuestionId] ASC,
+	[poco_exam_question_master_nSubjectId] ASC,
+	[poco_exam_question_master_nSemNo] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poso_exam_detail]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poso_exam_detail](
+	[poso_exam_detail_nId] [numeric](18, 0) NOT NULL,
+	[poso_exam_detail_sRowId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poso_exam_detail_sSlNo] [varchar](50) NOT NULL,
+	[poso_exam_detail_sDesp] [varchar](100) NULL,
+	[poso_exam_detail_nType] [int] NULL,
+	[poso_exam_detail_nFullMarks] [numeric](18, 0) NULL,
+	[poso_exam_detail_nIsMarks] [int] NULL,
+ CONSTRAINT [PK_poso_exam_detail_1] PRIMARY KEY CLUSTERED 
+(
+	[poso_exam_detail_nId] ASC,
+	[poso_exam_detail_sRowId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_bloom_taxanomy_master]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_bloom_taxanomy_master](
+	[poco_bloom_taxanomy_master_nId] [int] NOT NULL,
+	[poco_bloom_taxanomy_master_sDesp] [varchar](100) NULL,
+ CONSTRAINT [PK_poco_bloom_taxanomy_master] PRIMARY KEY CLUSTERED 
+(
+	[poco_bloom_taxanomy_master_nId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_subject_wise_co_master]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_subject_wise_co_master](
+	[poco_subject_wise_co_master_nPeriodId] [int] NOT NULL,
+	[poco_subject_wise_co_master_nSubjectId] [numeric](18, 0) NOT NULL,
+	[poco_subject_wise_co_master_nRowId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poco_subject_wise_co_master_sCoNo] [varchar](50) NOT NULL,
+	[poco_subject_wise_co_master_sDetails] [varchar](8000) NULL,
+ CONSTRAINT [PK_poco_subject_wise_co_master_1] PRIMARY KEY CLUSTERED 
+(
+	[poco_subject_wise_co_master_nPeriodId] ASC,
+	[poco_subject_wise_co_master_nSubjectId] ASC,
+	[poco_subject_wise_co_master_nRowId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poso_exam_main]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poso_exam_main](
+	[poso_exam_main_nId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[poso_exam_main_nCourse] [int] NULL,
+	[poso_exam_main_sExamName] [varchar](1000) NULL,
+	[poso_exam_main_sSemType] [varchar](1) NULL,
+ CONSTRAINT [PK_poso_exam_main] PRIMARY KEY CLUSTERED 
+(
+	[poso_exam_main_nId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+go
+GO
+
+/****** Object:  Table [dbo].[poco_period]    Script Date: 09/28/2022 13:50:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[poco_period](
+	[poco_period_nId] [int] NOT NULL,
+	[poco_period_sDesp] [varchar](50) NULL,
+ CONSTRAINT [PK_poco_period] PRIMARY KEY CLUSTERED 
+(
+	[poco_period_nId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive]  DEFAULT ((1)) FOR [TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD] ADD  CONSTRAINT [DF__TIME_TABL__TIME___703D0A7D]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink]
+GO
+
+ALTER TABLE [dbo].[poco_upload_resource_type] ADD  CONSTRAINT [DF_poco_upload_resource_type_poco_upload_resource_type_nIsUpload]  DEFAULT ((0)) FOR [poco_upload_resource_type_nIsUpload]
+GO
+
+ALTER TABLE [dbo].[poco_subject_master_module_detail_for_batch] ADD  CONSTRAINT [DF_poco_subject_master_module_detail_for_batch_poco_subject_master_module_detail_for_batch_nIsActive]  DEFAULT ((1)) FOR [poco_subject_master_module_detail_for_batch_nIsActive]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___0E02778E]  DEFAULT ('') FOR [poco_subject_wise_attainment_sAvg]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___0EF69BC7]  DEFAULT ('') FOR [poco_subject_wise_attainment_s60]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___0FEAC000]  DEFAULT ('') FOR [poco_subject_wise_attainment_s40_60]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___10DEE439]  DEFAULT ('') FOR [poco_subject_wise_attainment_s40]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___11D30872]  DEFAULT ('') FOR [poco_subject_wise_attainment_sLevel]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___12C72CAB]  DEFAULT ('') FOR [poco_subject_wise_attainment_sPoScale]
+GO
+
+ALTER TABLE [dbo].[poco_subject_wise_attainment] ADD  CONSTRAINT [DF__poco_subj__poco___13BB50E4]  DEFAULT ('') FOR [poco_subject_wise_attainment_sPoAttainment]
+GO
+
+ALTER TABLE [dbo].[poco_student_marks_detail] ADD  CONSTRAINT [DF_poco_student_marks_detail_poco_student_marks_detail_nMarks]  DEFAULT ((0)) FOR [poco_student_marks_detail_nMarks]
+GO
+
+ALTER TABLE [dbo].[poco_student_marks_main] ADD  CONSTRAINT [DF_poco_student_marks_main_poco_student_marks_main_nIsActive]  DEFAULT ((1)) FOR [poco_student_marks_main_nIsActive]
+GO
+
+ALTER TABLE [dbo].[poco_exam_question_master] ADD  CONSTRAINT [DF_poco_exam_question_master_poco_exam_question_master_nIsActive]  DEFAULT ((1)) FOR [poco_exam_question_master_nIsActive]
+GO
+
+ALTER TABLE [dbo].[poso_exam_detail] ADD  CONSTRAINT [DF_poso_exam_detail_poso_exam_detail_nIsMarks]  DEFAULT ((1)) FOR [poso_exam_detail_nIsMarks]
+GO
+
+/****************************************************/
+
+alter table TIME_TABLE_DATEWISE_FACULTY_LP add TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId numeric(18,0) default 0,
+TIME_TABLE_DATEWISE_FACULTY_LP_nLecture int default 0
+
+go
+
+update TIME_TABLE_DATEWISE_FACULTY_LP set TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId=0,
+TIME_TABLE_DATEWISE_FACULTY_LP_nLecture=0 where TIME_TABLE_DATEWISE_FACULTY_LP_nLecture is null
+
+go
+
+alter table STD_SUBJECT_MASTER_NEW add 
+STD_SUBJECT_SUBJECT_nStreamId int default 0,
+STD_SUBJECT_SUBJECT_nSemNo int default 0
+
+go
+
+update STD_SUBJECT_MASTER_NEW set STD_SUBJECT_SUBJECT_nStreamId=0,
+STD_SUBJECT_SUBJECT_nSemNo=0 where STD_SUBJECT_SUBJECT_nSemNo is null
+go
+
+
+/****************************************************/
+
+insert into poco_bloom_taxanomy_master select 1,'Knowledge'
+insert into poco_bloom_taxanomy_master select 2,'Comprehension'
+insert into poco_bloom_taxanomy_master select 3,'Application'
+insert into poco_bloom_taxanomy_master select 4,'Analysis'
+insert into poco_bloom_taxanomy_master select 5,'Synthesis'
+insert into poco_bloom_taxanomy_master select 6,'Evaluation'
+go
+
+
+/****************************************************/
+insert into poco_upload_resource_type select 1,'Class Notes',1
+insert into poco_upload_resource_type select 2,'Assignment',1
+insert into poco_upload_resource_type select 3,'External Resource Link',0
+insert into poco_upload_resource_type select 4,'JIS Video Lecture(Depository)',0
+insert into poco_upload_resource_type select 5,'Class Lecture',1
+go
+/****************************************************/
+insert into poco_module select 1,'M01'
+insert into poco_module select 2,'M02'
+insert into poco_module select 3,'M03'
+insert into poco_module select 4,'M04'
+insert into poco_module select 5,'M05'
+insert into poco_module select 6,'M06'
+insert into poco_module select 7,'M07'
+insert into poco_module select 8,'M08'
+insert into poco_module select 9,'M09'
+insert into poco_module select 10,'M10'
+go
+/****************************************************/
+
+

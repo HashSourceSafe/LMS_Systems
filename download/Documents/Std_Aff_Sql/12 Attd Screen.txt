@@ -1,0 +1,445 @@
+Proc_Get_Student_Data_For_Attendance
+Proc_Get_Associated_period
+Proc_Get_OrderBy
+Proc_Get_Display_Type
+Proc_Attendence_percentage_Faculty_Wise
+Proc_Get_Faculty_DayPeriod_Details
+
+TIME_TABLE_FACULTY_VIEW
+TIME_TABLE_TEMPLATE_FACULTY_MBA_VIEW
+EMPH_View
+TIME_TABLE_TEMPLATE_FACULTY_VIEW
+
+
+Proc_Get_Faculty_Wise_Class
+Proc_Get_Faculty_Date_Wise_Routine_Calender
+
+Proc_Get_Faculty_Date_Wise_Routine
+Proc_Disp_Faculty_Month_Wise_Matrix
+
+=====================================
+
+/****** Object:  Table [dbo].[TIME_TABLE_ALLOCATION]    Script Date: 12/23/2017 11:33:14 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[TIME_TABLE_ALLOCATION](
+	[TIME_TABLE_ALLOCATION_nBatch] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_nCourseId] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_nStreamId] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_nSectionId] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_nSemesterId] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_dFromDate] [datetime] NOT NULL,
+	[TIME_TABLE_ALLOCATION_dToDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_nstartyrmonth] [int] NULL,
+	[TIME_TABLE_DATEWISE_nendyrmonth] [int] NULL,
+	[TIME_TABLE_ALLOCATION_dChangeDate] [datetime] NULL,
+	[TIME_TABLE_ALLOCATION_nLastUpdateFlg] [int] NULL,
+	[TIME_TABLE_ALLOCATION_nCollegeId] [int] NOT NULL,
+	[TIME_TABLE_ALLOCATION_nIsActive] [int] NOT NULL,
+ CONSTRAINT [PK_TIME_TABLE_ALLOCATION] PRIMARY KEY CLUSTERED 
+(
+	[TIME_TABLE_ALLOCATION_nBatch] ASC,
+	[TIME_TABLE_ALLOCATION_nCourseId] ASC,
+	[TIME_TABLE_ALLOCATION_nStreamId] ASC,
+	[TIME_TABLE_ALLOCATION_nSectionId] ASC,
+	[TIME_TABLE_ALLOCATION_nSemesterId] ASC,
+	[TIME_TABLE_ALLOCATION_dFromDate] ASC,
+	[TIME_TABLE_ALLOCATION_dToDate] ASC,
+	[TIME_TABLE_ALLOCATION_nCollegeId] ASC,
+	[TIME_TABLE_ALLOCATION_nIsActive] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+
+
+/****** Object:  Table [dbo].[TIME_TABLE_DATEWISE]    Script Date: 12/23/2017 11:33:14 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[TIME_TABLE_DATEWISE](
+	[TIME_TABLE_DATEWISE_nId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[TIME_TABLE_DATEWISE_dDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_nBatch] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nCourseId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nStreamId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nSectionId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nSemesterId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nDayId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nPeriodId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nSubjectId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nGroupId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nIsRecess] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nChangeReqId] [numeric](18, 0) NULL,
+	[TIME_TABLE_DATEWISE_dOldDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_nKeyId] [numeric](18, 0) NOT NULL,
+	[TIME_TABLE_DATEWISE_nCollegeId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_nIsActive] [int] NULL,
+ CONSTRAINT [PK_TIME_TABLE_DATEWISE] PRIMARY KEY CLUSTERED 
+(
+	[TIME_TABLE_DATEWISE_nId] ASC,
+	[TIME_TABLE_DATEWISE_dDate] ASC,
+	[TIME_TABLE_DATEWISE_nBatch] ASC,
+	[TIME_TABLE_DATEWISE_nCourseId] ASC,
+	[TIME_TABLE_DATEWISE_nStreamId] ASC,
+	[TIME_TABLE_DATEWISE_nSectionId] ASC,
+	[TIME_TABLE_DATEWISE_nSemesterId] ASC,
+	[TIME_TABLE_DATEWISE_nDayId] ASC,
+	[TIME_TABLE_DATEWISE_nPeriodId] ASC,
+	[TIME_TABLE_DATEWISE_nSubjectId] ASC,
+	[TIME_TABLE_DATEWISE_nGroupId] ASC,
+	[TIME_TABLE_DATEWISE_dOldDate] ASC,
+	[TIME_TABLE_DATEWISE_nKeyId] ASC,
+	[TIME_TABLE_DATEWISE_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+
+/****** Object:  Table [dbo].[TIME_TABLE_DATEWISE_FACULTY]    Script Date: 12/23/2017 11:33:14 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY](
+	[TIME_TABLE_DATEWISE_FACULTY_dDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nBatch] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nCourseId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nStreamId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nSectionId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nSemesterId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nDayId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nPeriodId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nSubjectId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nGroupId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nIsRecess] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nFacultyCode] [varchar](50) NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nFacultyName] [varchar](250) NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nFacultyShortName] [varchar](50) NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_sFacultyChange] [varchar](20) NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_dChangeDatetime] [datetime] NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nAllocationFlg] [int] NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nChangeReqId] [numeric](18, 0) NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_dOldDate] [datetime] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nKeyId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nCollegeId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_nIsActive] [int] NULL,
+	[TIME_TABLE_DATEWISE_FACULTY_sActiveFlag] [varchar](1) NULL,
+ CONSTRAINT [PK_TIME_TABLE_DATEWISE_FACULTY_1] PRIMARY KEY CLUSTERED 
+(
+	[TIME_TABLE_DATEWISE_FACULTY_dDate] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nBatch] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nCourseId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nStreamId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nSectionId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nSemesterId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nDayId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nPeriodId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nSubjectId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nGroupId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nFacultyCode] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_dOldDate] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nKeyId] ASC,
+	[TIME_TABLE_DATEWISE_FACULTY_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_ALLOCATION] ADD  CONSTRAINT [DF_TIME_TABLE_ALLOCATION_TIME_TABLE_ALLOCATION_dChangeDate]  DEFAULT (getdate()) FOR [TIME_TABLE_ALLOCATION_dChangeDate]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_ALLOCATION] ADD  CONSTRAINT [DF_TIME_TABLE_ALLOCATION_TIME_TABLE_ALLOCATION_nLastUpdateFlg]  DEFAULT ((0)) FOR [TIME_TABLE_ALLOCATION_nLastUpdateFlg]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_ALLOCATION] ADD  CONSTRAINT [DF__TIME_TABL__TIME___5A94E68F]  DEFAULT ((0)) FOR [TIME_TABLE_ALLOCATION_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_ALLOCATION] ADD  CONSTRAINT [DF__TIME_TABL__TIME___5B890AC8]  DEFAULT ((1)) FOR [TIME_TABLE_ALLOCATION_nIsActive]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_TIME_TABLE_DATEWISE_nIsRecess]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_nIsRecess]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE] ADD  CONSTRAINT [DF__TIME_TABL__TIME___788F5DCA]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_nChangeReqId]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_TIME_TABLE_DATEWISE_dOldDate]  DEFAULT ('1900/01/01') FOR [TIME_TABLE_DATEWISE_dOldDate]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE] ADD  CONSTRAINT [DF__TIME_TABL__TIME___5C7D2F01]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE] ADD  CONSTRAINT [DF__TIME_TABL__TIME___5D71533A]  DEFAULT ((1)) FOR [TIME_TABLE_DATEWISE_nIsActive]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_FACULTY_TIME_TABLE_DATEWISE_FACULTY_nIsRecess]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_FACULTY_nIsRecess]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_FACULTY_TIME_TABLE_DATEWISE_FACULTY_nAllocationFlg]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_FACULTY_nAllocationFlg]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF__TIME_TABL__TIME___76A71558]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_FACULTY_nChangeReqId]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_FACULTY_TIME_TABLE_DATEWISE_FACULTY_dOldDate]  DEFAULT ('1900/01/01') FOR [TIME_TABLE_DATEWISE_FACULTY_dOldDate]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF__TIME_TABL__TIME___6606993B]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_FACULTY_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF__TIME_TABL__TIME___66FABD74]  DEFAULT ((1)) FOR [TIME_TABLE_DATEWISE_FACULTY_nIsActive]
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_FACULTY] ADD  CONSTRAINT [DF__TIME_TABL__TIME___67EEE1AD]  DEFAULT ('A') FOR [TIME_TABLE_DATEWISE_FACULTY_sActiveFlag]
+GO
+
+
+
+
+===================================
+
+/****** Object:  Table [dbo].[attendence_faculty_detail]    Script Date: 12/23/2017 11:35:32 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[attendence_faculty_detail](
+	[Attendence_Faculty_Detail_nId] [numeric](18, 0) NOT NULL,
+	[Attendence_Faculty_Detail_nFacultyCode] [varchar](50) NOT NULL,
+	[attendence_faculty_detail_dEntryDate] [datetime] NULL,
+	[attendence_faculty_detail_dDate] [datetime] NOT NULL,
+	[attendence_faculty_detail_nBatchId] [int] NOT NULL,
+	[attendence_faculty_detail_nCourseId] [int] NOT NULL,
+	[attendence_faculty_detail_nStreamId] [int] NOT NULL,
+	[attendence_faculty_detail_nSemesterId] [int] NOT NULL,
+	[attendence_faculty_detail_nSectionId] [int] NOT NULL,
+	[attendence_faculty_detail_nGroupId] [int] NOT NULL,
+	[attendence_faculty_detail_nPeriodId] [int] NOT NULL,
+	[attendence_faculty_detail_nSubjectId] [int] NOT NULL,
+	[attendence_faculty_detail_nCollegeId] [int] NOT NULL,
+	[attendence_faculty_detail_nIsActive] [int] NULL,
+ CONSTRAINT [PK_attendence_faculty_detail_1] PRIMARY KEY CLUSTERED 
+(
+	[Attendence_Faculty_Detail_nId] ASC,
+	[Attendence_Faculty_Detail_nFacultyCode] ASC,
+	[attendence_faculty_detail_dDate] ASC,
+	[attendence_faculty_detail_nBatchId] ASC,
+	[attendence_faculty_detail_nCourseId] ASC,
+	[attendence_faculty_detail_nStreamId] ASC,
+	[attendence_faculty_detail_nSemesterId] ASC,
+	[attendence_faculty_detail_nSectionId] ASC,
+	[attendence_faculty_detail_nGroupId] ASC,
+	[attendence_faculty_detail_nPeriodId] ASC,
+	[attendence_faculty_detail_nSubjectId] ASC,
+	[attendence_faculty_detail_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+
+/****** Object:  Table [dbo].[Attendence_Student_Detail]    Script Date: 12/23/2017 11:35:32 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[Attendence_Student_Detail](
+	[Attendence_Student_Detail_nId] [int] NOT NULL,
+	[Attendence_Student_Detail_nStudentId] [int] NOT NULL,
+	[Attendence_Student_Detail_nIsPresent] [int] NOT NULL,
+	[Attendence_Student_Detail_nPenalty] [int] NULL,
+	[attendence_student_detail_dEntryDate] [datetime] NULL,
+	[attendence_student_detail_dDate] [datetime] NOT NULL,
+	[attendence_student_detail_nBatchId] [int] NOT NULL,
+	[attendence_student_detail_nCourseId] [int] NOT NULL,
+	[attendence_student_detail_nStreamId] [int] NOT NULL,
+	[attendence_student_detail_nSemesterId] [int] NOT NULL,
+	[attendence_student_detail_nSectionId] [int] NOT NULL,
+	[attendence_student_detail_nGroupId] [int] NOT NULL,
+	[attendence_student_detail_nPeriodId] [int] NOT NULL,
+	[attendence_student_detail_nSubjectId] [int] NOT NULL,
+	[Attendence_Student_Detail_sRemarks] [varchar](500) NULL,
+	[attendence_student_detail_nCollegeId] [int] NOT NULL,
+	[attendence_student_detail_nIsActive] [int] NULL,
+ CONSTRAINT [PK_Attendence_Student_Detail] PRIMARY KEY CLUSTERED 
+(
+	[Attendence_Student_Detail_nId] ASC,
+	[Attendence_Student_Detail_nStudentId] ASC,
+	[attendence_student_detail_dDate] ASC,
+	[attendence_student_detail_nBatchId] ASC,
+	[attendence_student_detail_nCourseId] ASC,
+	[attendence_student_detail_nStreamId] ASC,
+	[attendence_student_detail_nSemesterId] ASC,
+	[attendence_student_detail_nSectionId] ASC,
+	[attendence_student_detail_nGroupId] ASC,
+	[attendence_student_detail_nPeriodId] ASC,
+	[attendence_student_detail_nSubjectId] ASC,
+	[attendence_student_detail_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+/****** Object:  Table [dbo].[Attendence_Student_Main]    Script Date: 12/23/2017 11:35:32 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Attendence_Student_Main](
+	[Attendence_Student_Main_nId] [int] NOT NULL,
+	[Attendence_Student_Main_dDate] [datetime] NOT NULL,
+	[Attendence_Student_Main_nBatchId] [int] NOT NULL,
+	[Attendence_Student_Main_nCourseId] [int] NOT NULL,
+	[Attendence_Student_Main_nStreamId] [int] NOT NULL,
+	[Attendence_Student_Main_nSemesterId] [int] NOT NULL,
+	[Attendence_Student_Main_nSectionId] [int] NOT NULL,
+	[Attendence_Student_Main_nGroupId] [int] NOT NULL,
+	[Attendence_Student_Main_nPeriodId] [int] NOT NULL,
+	[Attendence_Student_Main_nSubjectId] [int] NOT NULL,
+	[Attendence_Student_Main_dEntryDate] [datetime] NULL,
+	[Attendence_Student_Main_nCollegeId] [int] NOT NULL,
+	[Attendence_Student_Main_nIsActive] [int] NULL,
+ CONSTRAINT [PK_Attendence_Student_Main] PRIMARY KEY CLUSTERED 
+(
+	[Attendence_Student_Main_nId] ASC,
+	[Attendence_Student_Main_dDate] ASC,
+	[Attendence_Student_Main_nBatchId] ASC,
+	[Attendence_Student_Main_nCourseId] ASC,
+	[Attendence_Student_Main_nStreamId] ASC,
+	[Attendence_Student_Main_nSemesterId] ASC,
+	[Attendence_Student_Main_nSectionId] ASC,
+	[Attendence_Student_Main_nGroupId] ASC,
+	[Attendence_Student_Main_nPeriodId] ASC,
+	[Attendence_Student_Main_nSubjectId] ASC,
+	[Attendence_Student_Main_nCollegeId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__1D58FE60]  DEFAULT (getdate()) FOR [attendence_faculty_detail_dEntryDate]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__5F26C1BD]  DEFAULT ((0)) FOR [attendence_faculty_detail_nBatchId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__601AE5F6]  DEFAULT ((0)) FOR [attendence_faculty_detail_nCourseId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__610F0A2F]  DEFAULT ((0)) FOR [attendence_faculty_detail_nStreamId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__62032E68]  DEFAULT ((0)) FOR [attendence_faculty_detail_nSemesterId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__62F752A1]  DEFAULT ((0)) FOR [attendence_faculty_detail_nSectionId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__63EB76DA]  DEFAULT ((0)) FOR [attendence_faculty_detail_nGroupId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__64DF9B13]  DEFAULT ((0)) FOR [attendence_faculty_detail_nPeriodId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__65D3BF4C]  DEFAULT ((0)) FOR [attendence_faculty_detail_nSubjectId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__62360857]  DEFAULT ((0)) FOR [attendence_faculty_detail_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[attendence_faculty_detail] ADD  CONSTRAINT [DF__attendenc__atten__632A2C90]  DEFAULT ((1)) FOR [attendence_faculty_detail_nIsActive]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Detail] ADD  CONSTRAINT [DF_Attendence_Student_Detail_Attendence_Student_Detail_nIsPresent]  DEFAULT ((0)) FOR [Attendence_Student_Detail_nIsPresent]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Detail] ADD  CONSTRAINT [DF_Attendence_Student_Detail_attendence_student_detail_dEntryDate]  DEFAULT (getdate()) FOR [attendence_student_detail_dEntryDate]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Detail] ADD  CONSTRAINT [DF__Attendenc__Atten__00307F92]  DEFAULT ('') FOR [Attendence_Student_Detail_sRemarks]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Detail] ADD  CONSTRAINT [DF__Attendenc__atten__604DBFE5]  DEFAULT ((0)) FOR [attendence_student_detail_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Detail] ADD  CONSTRAINT [DF__Attendenc__atten__6141E41E]  DEFAULT ((1)) FOR [attendence_student_detail_nIsActive]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nBatchId1]  DEFAULT (getdate()) FOR [Attendence_Student_Main_dDate]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nBatchId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nBatchId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nCourseId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nCourseId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nStreamId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nStreamId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nSemesterId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nSemesterId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nSectionId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nSectionId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nGroupId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nGroupId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nPeriodId]  DEFAULT ((0)) FOR [Attendence_Student_Main_nPeriodId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF_Attendence_Student_Main_Attendence_Student_Main_nPeriodId1]  DEFAULT ((0)) FOR [Attendence_Student_Main_nSubjectId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF__Attendenc__Atten__7B6BCA75]  DEFAULT (getdate()) FOR [Attendence_Student_Main_dEntryDate]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF__Attendenc__Atten__5E657773]  DEFAULT ((0)) FOR [Attendence_Student_Main_nCollegeId]
+GO
+
+ALTER TABLE [dbo].[Attendence_Student_Main] ADD  CONSTRAINT [DF__Attendenc__Atten__5F599BAC]  DEFAULT ((1)) FOR [Attendence_Student_Main_nIsActive]
+GO
+
+
+
+================================================

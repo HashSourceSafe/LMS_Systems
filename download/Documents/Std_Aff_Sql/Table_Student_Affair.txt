@@ -1,0 +1,984 @@
+COLLATE SQL_Latin1_General_CP1_CI_AS
+
+Login & Menu
+-------------
+pay_holiday_list
+BACK_OFFICE_LOGINMST
+MENUMST
+STD_COLLEGE
+COLLEGE_RELATION
+VIEW_MENU_CONTROL
+MENUACCESSMST
+
+http://122.252.249.26:93/
+admin	
+ship@shipadmin
+
+Master
+--------
+STD_COURSE_MASTER
+STD_STREAM_MASTER
+STD_SUBJECT_MASTER_NEW
+PERIOD_MASTER
+PERIOD_MASTER_TIME_TABLE
+STD_BATCHWISE_SEMESTER
+STD_BATCHWISE_COURSE
+STD_BATCH_COURSE_WISE_STREAM
+Semester_Student_Relation
+Semester_Section_Group_Student_Relation
+
+
+
+
+Important Table
+--------------
+
+
+
+STD_STREAM_WISE_SUBJECT
+
+
+
+
+Time Table Draft
+----------------
+TIME_TABLE_TEMPLATE_DRAFT
+TIME_TABLE_TEMPLATE_FACULTY
+
+
+Time Table Allocation
+---------------------
+TIME_TABLE_ALLOCATION
+TIME_TABLE_DATEWISE
+TIME_TABLE_DATEWISE_FACULTY
+TIME_TABLE_DATEWISE_FACULTY_LP
+
+
+Attendance Data
+-------------------------
+Attendence_Student_Main
+attendence_student_detail
+attendence_faculty_detail
+
+
+
+select * into TIME_TABLE_DATEWISE_2018_01_31 from TIME_TABLE_DATEWISE
+select * into TIME_TABLE_DATEWISE_FACULTY_2018_01_31 from TIME_TABLE_DATEWISE_FACULTY
+select * into Attendence_Student_Main_2018_01_31 from Attendence_Student_Main
+select * into attendence_student_detail_2018_01_31 from attendence_student_detail
+select * into attendence_faculty_detail_2018_01_31 from attendence_faculty_detail
+
+
+
+========================================
+
+VIEW_SHOW_ALL_STUDENT
+VIEW_SEMESTER_NAME
+
+update start batch year
+
+update std_student_master_view set STD_STUDENT_MASTER_sStudentStartBatchYr=STD_STUDENT_BATCH_nBatchYear
+where STD_STUDENT_MASTER_sStudentStartBatchYr=0
+
+
+STD_BATCHWISE_SEMESTER_view
+MainGroup
+
+set payroll code ADMIN_BRNMST
+
+add payroll data from HR_Entry
+
+PERIOD_MASTER_nCollegeId=100 to PERIOD_MASTER
+
+HOLIDAY_LIST_VIEW =>>>niterp
+
+CREATE VIEW dbo.HOLIDAY_LIST_VIEW
+AS
+SELECT     holi_cstcentre, holi_year, holi_month, holi_date, holi_desc
+FROM         niterp.dbo.pay_holiday_list
+
+
+
+EMPH_View problem (niterp)
+FACULTY_NAME_RETURN_VIEW 
+VIEW_FACULTY_PROJECT --> new view
+
+
+Proc_faculty_attendance_monthwise_detail_new
+Proc_class_population_month_facultywise
+
+
+-----routine allot data------
+select * from TIME_TABLE_TEMPLATE_DRAFT
+select * from TIME_TABLE_TEMPLATE_FACULTY
+===============================================
+
+TIME_TABLE_ALLOCATION
+TIME_TABLE_DATEWISE
+TIME_TABLE_DATEWISE_FACULTY
+
+select * from Attendence_Student_Main
+select * from attendence_student_detail
+select * from attendence_faculty_detail
+--------------------------------
+
+select STD_SUBJECT_sSUBJECT_CODE,GroupName,STD_SUBJECT_sSUBJECT_IS_THEORY from routine_subject_wise_gorup_view
+group by STD_SUBJECT_sSUBJECT_CODE,GroupName,STD_SUBJECT_sSUBJECT_IS_THEORY order by STD_SUBJECT_sSUBJECT_CODE
+
+select STD_STUDENT_MASTER_sCollegeRoll,STD_SUBJECT_sSUBJECT_CODE,COUNT(*) as x 
+from Semester_Section_Group_Student_Relation_view
+group by STD_STUDENT_MASTER_sCollegeRoll,STD_SUBJECT_sSUBJECT_CODE 
+order by x desc
+
+=================new change================
+emph_view
+emph_visiting_View
+PERIOD_MASTER data type changed St & end time
+Proc_batch_stream_wise_period
+
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+CREATE TABLE [dbo].[BACK_OFFICE_LOGIN_STREAM_MASTER](
+	[back_office_login_stream_master_nUserId] [int] NOT NULL,
+	[back_office_login_stream_master_nStreamId] [int] NOT NULL,
+ CONSTRAINT [PK_BACK_OFFICE_LOGIN_STREAM_MASTER] PRIMARY KEY CLUSTERED 
+(
+	[back_office_login_stream_master_nUserId] ASC,
+	[back_office_login_stream_master_nStreamId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+
+==========================================
+BACK_OFFICE_LOGINMST_nUserId =>auto id
+BACK_OFFICE_LOGIN_STREAM_MASTER_VIEW
+proc_get_user_wise_stream_id
+============================================
+new change on 20/07/2014
+TIME_TABLE_TEMPLATE_FACULTY_VIEW
+Proc_Get_Faculty_Wise_Class
+-----------------------
+
+
+--Proc_Get_Is_Class_Exist
+--proc_get_faculty_date_day_routine
+--Proc_Set_Date_Wise_Class
+
+
+
+select * from Attendence_Student_Main where Attendence_Student_Main_nId
+not in(select Attendence_Student_Detail_nId from attendence_student_detail)
+
+select * from Attendence_Student_Main where Attendence_Student_Main_nId
+not in(select attendence_faculty_detail_nId from attendence_faculty_detail)
+
+select * from attendence_student_detail where attendence_student_detail_nId
+not in(select Attendence_Student_Main_nId from Attendence_Student_Main)
+
+select * from attendence_student_detail where attendence_student_detail_nId
+not in(select attendence_faculty_detail_nId from attendence_faculty_detail)
+
+select * from attendence_faculty_detail where attendence_faculty_detail_nId
+not in(select Attendence_Student_Main_nId from Attendence_Student_Main)
+
+
+--------------------------------
+
+
+
+Proc_Disp_Pending_Routine
+Proc_Disp_Pending_Routine_Allocation
+================================================
+
+
+select 
+TIME_TABLE_TEMPLATE_FACULTY_sBatch,
+TIME_TABLE_TEMPLATE_FACULTY_nCourseId,
+TIME_TABLE_TEMPLATE_FACULTY_nStreamId,
+TIME_TABLE_TEMPLATE_FACULTY_nSectionId,
+TIME_TABLE_TEMPLATE_FACULTY_nSemesterId,
+TIME_TABLE_TEMPLATE_FACULTY_nDayId,
+TIME_TABLE_TEMPLATE_FACULTY_nPeriodId,
+TIME_TABLE_TEMPLATE_FACULTY_nSubjectId,
+TIME_TABLE_TEMPLATE_FACULTY_nGroupId,
+TIME_TABLE_TEMPLATE_FACULTY_nIsRecess,
+TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode,
+TIME_TABLE_TEMPLATE_FACULTY_nAccsession,
+TIME_TABLE_TEMPLATE_FACULTY_nIsNew,
+TIME_TABLE_TEMPLATE_FACULTY_nCollegeId,
+TIME_TABLE_TEMPLATE_FACULTY_nIsActive,
+count(*) as x
+from TIME_TABLE_TEMPLATE_FACULTY
+
+where TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=10
+group by 
+TIME_TABLE_TEMPLATE_FACULTY_sBatch,
+TIME_TABLE_TEMPLATE_FACULTY_nCourseId,
+TIME_TABLE_TEMPLATE_FACULTY_nStreamId,
+TIME_TABLE_TEMPLATE_FACULTY_nSectionId,
+TIME_TABLE_TEMPLATE_FACULTY_nSemesterId,
+TIME_TABLE_TEMPLATE_FACULTY_nDayId,
+TIME_TABLE_TEMPLATE_FACULTY_nPeriodId,
+TIME_TABLE_TEMPLATE_FACULTY_nSubjectId,
+TIME_TABLE_TEMPLATE_FACULTY_nGroupId,
+TIME_TABLE_TEMPLATE_FACULTY_nIsRecess,
+TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode,
+TIME_TABLE_TEMPLATE_FACULTY_nAccsession,
+TIME_TABLE_TEMPLATE_FACULTY_nIsNew,
+TIME_TABLE_TEMPLATE_FACULTY_nCollegeId,
+TIME_TABLE_TEMPLATE_FACULTY_nIsActive
+order by x desc
+
+
+
+
+===========================================================
+select 
+TIME_TABLE_TEMPLATE_DRAFT_nBatch,
+TIME_TABLE_TEMPLATE_DRAFT_nCourseId,
+TIME_TABLE_TEMPLATE_DRAFT_nStreamId,
+TIME_TABLE_TEMPLATE_DRAFT_nSectionId,
+TIME_TABLE_TEMPLATE_DRAFT_nSemesterId,
+TIME_TABLE_TEMPLATE_DRAFT_nDayId,
+TIME_TABLE_TEMPLATE_DRAFT_nPeriodId,
+TIME_TABLE_TEMPLATE_DRAFT_nSubjectId,
+TIME_TABLE_TEMPLATE_DRAFT_nGroupId,
+TIME_TABLE_TEMPLATE_DRAFT_nIsRecess,
+TIME_TABLE_TEMPLATE_DRAFT_nAcaSess,
+TIME_TABLE_TEMPLATE_DRAFT_nIsNew,
+TIME_TABLE_TEMPLATE_DRAFT_nCollegeId,
+TIME_TABLE_TEMPLATE_DRAFT_nIsActive,
+COUNT(*) as x
+from 
+TIME_TABLE_TEMPLATE_DRAFT where TIME_TABLE_TEMPLATE_DRAFT_nCollegeId=1
+group by 
+TIME_TABLE_TEMPLATE_DRAFT_nBatch,
+TIME_TABLE_TEMPLATE_DRAFT_nCourseId,
+TIME_TABLE_TEMPLATE_DRAFT_nStreamId,
+TIME_TABLE_TEMPLATE_DRAFT_nSectionId,
+TIME_TABLE_TEMPLATE_DRAFT_nSemesterId,
+TIME_TABLE_TEMPLATE_DRAFT_nDayId,
+TIME_TABLE_TEMPLATE_DRAFT_nPeriodId,
+TIME_TABLE_TEMPLATE_DRAFT_nSubjectId,
+TIME_TABLE_TEMPLATE_DRAFT_nGroupId,
+TIME_TABLE_TEMPLATE_DRAFT_nIsRecess,
+TIME_TABLE_TEMPLATE_DRAFT_nAcaSess,
+TIME_TABLE_TEMPLATE_DRAFT_nIsNew,
+TIME_TABLE_TEMPLATE_DRAFT_nCollegeId,
+TIME_TABLE_TEMPLATE_DRAFT_nIsActive
+order by X desc
+
+==========================================
+alter table TIME_TABLE_TEMPLATE_FACULTY add sl_id numeric(18,0) identity(1,1) not null
+
+
+=====================================================================================
+select * from TIME_TABLE_TEMPLATE_FACULTY
+where TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_sBatch=2015
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nCourseId=2
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nStreamId=3
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSectionId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSemesterId=6
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nDayId=6
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nPeriodId=2
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSubjectId=1159 
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nGroupId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsRecess=0
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode='JIS/0753'
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nAccsession=11
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsNew=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsActive=1
+
+============================================================================================
+
+delete from TIME_TABLE_TEMPLATE_FACULTY
+where TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_sBatch=2015
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nCourseId=2
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nStreamId=3
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSectionId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSemesterId=6
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nDayId=6
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nPeriodId=2
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nSubjectId=1159 
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nGroupId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsRecess=0
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode='JIS/0753'
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nAccsession=11
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsNew=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=1
+and TIME_TABLE_TEMPLATE_FACULTY.TIME_TABLE_TEMPLATE_FACULTY_nIsActive=1
+and sl_id=2248
+
+
+
+
+select * from TIME_TABLE_TEMPLATE_DRAFT where
+and TIME_TABLE_TEMPLATE_DRAFT_nBatch=0
+and TIME_TABLE_TEMPLATE_DRAFT_nCourseId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nStreamId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nSectionId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nSemesterId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nDayId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nPeriodId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nSubjectId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nGroupId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nIsRecess=0
+and TIME_TABLE_TEMPLATE_DRAFT_nAcaSess=0
+and TIME_TABLE_TEMPLATE_DRAFT_nIsNew=0
+and TIME_TABLE_TEMPLATE_DRAFT_nCollegeId=0
+and TIME_TABLE_TEMPLATE_DRAFT_nIsActive=0
+
+
+select TIME_TABLE_TEMPLATE_DRAFT.* from TIME_TABLE_TEMPLATE_DRAFT,temp1 where
+TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nBatch=temp1.TIME_TABLE_TEMPLATE_DRAFT_nBatch
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nCourseId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nCourseId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nStreamId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nStreamId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nSectionId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nSectionId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nSemesterId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nSemesterId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nDayId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nDayId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nPeriodId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nPeriodId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nSubjectId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nSubjectId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nGroupId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nGroupId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nIsRecess=temp1.TIME_TABLE_TEMPLATE_DRAFT_nIsRecess
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nAcaSess=temp1.TIME_TABLE_TEMPLATE_DRAFT_nAcaSess
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nIsNew=temp1.TIME_TABLE_TEMPLATE_DRAFT_nIsNew
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nCollegeId=temp1.TIME_TABLE_TEMPLATE_DRAFT_nCollegeId
+and TIME_TABLE_TEMPLATE_DRAFT.TIME_TABLE_TEMPLATE_DRAFT_nIsActive=temp1.TIME_TABLE_TEMPLATE_DRAFT_nIsActive
+
+
+
+Proc_Subject_Group_Mapping_List
+Proc_Subject_Group_Mapping_Check_With_Routine
+
+Proc_Get_Routine_Vs_Allotment
+Proc_Save_Date_Wise_Routine_Allotment_Single_Faculty
+Proc_Delete_Date_Wise_Routine_Allotment_Single_Faculty
+Proc_Delete_Date_Wise_Routine_Allotment
+Proc_Delete_All_Routine_For_Single_Faculty 1,'JIS/0562','2018/01/01','2018/03/31',1
+
+
+--Proc_Get_Routine_Vs_Allotment 1,11,'E','%',2
+
+Proc_Save_Date_Wise_Routine_Allotment_Single_Faculty
+ 1,--@P_COLLEGE_ID INT,
+ '2018/01/01',--@P_FROM_DATE DATETIME,    
+ '2018/02/28',--@P_TO_DATE DATETIME,    
+ 2015,--@P_BATCH INT,    
+ 2,--@P_COURSE_ID INT,    
+ 4,--@P_STREAM_ID INT,    
+ 6,--@P_SEMESTER_ID INT,    
+ 2,--@P_SECTION_ID INT,  
+ 'JIS/0509',--@p_faculty_code varchar(20),
+ 4,--@p_day_id int,
+ 9,--@p_period_id int,
+ 1183,--@p_sub_id int,
+ 5,--@p_group_id int,
+0--@p_flag int 
+
+
+
+
+
+
+select * from Semester_Student_Relation
+where Semester_Student_Relation_nStudentId=419569
+
+select * from Semester_Section_Group_Student_Relation
+where Semester_Section_Group_Student_Relation_nStudentId=419569
+
+
+--------BULK ROUTINE UPDATE----------------------------
+
+select TIME_TABLE_TEMPLATE_FACULTY_nCourseId from TIME_TABLE_TEMPLATE_FACULTY
+where TIME_TABLE_TEMPLATE_FACULTY_nAccsession=12
+and TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=3
+and TIME_TABLE_TEMPLATE_FACULTY_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType='O'
+)
+group by TIME_TABLE_TEMPLATE_FACULTY_nCourseId
+order by TIME_TABLE_TEMPLATE_FACULTY_nCourseId
+
+select * from STD_COURSE_MASTER where STD_COURSE_MASTER_nID in(
+select TIME_TABLE_TEMPLATE_FACULTY_nCourseId from TIME_TABLE_TEMPLATE_FACULTY
+where TIME_TABLE_TEMPLATE_FACULTY_nAccsession=12
+and TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=3
+and TIME_TABLE_TEMPLATE_FACULTY_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType='O'
+)
+group by TIME_TABLE_TEMPLATE_FACULTY_nCourseId
+)
+order by STD_COURSE_MASTER_nID
+
+
+declare @m_college_id int
+declare @m_course_id int
+declare @m_type int
+
+set @m_college_id=3
+set @m_course_id=2
+set @m_type=0
+
+
+--exec Proc_Bulk_Routine_Allocation @m_college_id,2019,@m_course_id,1,12,'2019/07/08','2019/11/15',@m_type
+--exec Proc_Bulk_Routine_Allocation @m_college_id,2018,@m_course_id,3,12,'2019/07/08','2019/11/15',@m_type
+--exec Proc_Bulk_Routine_Allocation @m_college_id,2017,@m_course_id,5,12,'2019/07/08','2019/11/15',@m_type
+--exec Proc_Bulk_Routine_Allocation @m_college_id,2016,@m_course_id,7,12,'2019/07/08','2019/11/15',@m_type
+
+
+
+
+
+ 
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=3
+and attendence_faculty_detail_dDate='2018/01/04'
+AND Attendence_Faculty_Detail_nFacultyCode='GIT/0002'
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=3
+and Attendence_Faculty_Detail_nId=13747
+
+select * from attendence_student_detail where attendence_student_detail_nCollegeId=3
+and attendence_student_detail_dDate='2018/01/04'
+and attendence_student_detail_nSubjectId=955
+and Attendence_Student_Detail_nId=13747
+
+Proc_Get_Student_Attd_Percentage
+Proc_Get_Attd_Entry_Pending
+Proc_Get_Faculty_Wise_Std_Attd_Percentage
+
+
+Proc_Get_Faculty_Wise_Std_Attd_Percentage 1,'2018/01/01','2018/01/31',0,'ma%'
+Proc_Get_Faculty_Wise_Std_Attd_Percentage 1,'2018/02/01','2018/02/28',0,'ma%'
+Proc_Get_Faculty_Wise_Std_Attd_Percentage 1,'2018/03/01','2018/03/31',0,'ma%'
+Proc_Get_Faculty_Wise_Std_Attd_Percentage 1,'2018/04/01','2018/04/30',0,'ma%'
+Proc_Get_Faculty_Wise_Std_Attd_Percentage 1,'2018/01/01','2018/04/30',0,'ma%'
+
+
+
+
+
+
+Attd Entered
+Student Attd(%) as per Attd Entered
+
+
+
+Proc_Get_Student_Attendance_Save_Id
+Proc_Get_Student_Attendance_Count
+
+
+
+===New change MIS===================
+Proc_Disp_Weekly_Student_Load_Stat
+Proc_Disp_Weekly_Student_Average_Attd
+Proc_Get_Student_Attd_Percentage_New
+
+Proc_Get_Faculty_Attd_Percentage_New
+Proc_Disp_Weekly_Faculty_Average_Attd
+
+====================================
+
+
+
+
+
+Proc_Get_Faculty_Attd_Percentage_New 6,2,'2018/07/16','2018/08/28',
+0,    
+0,    
+0,    
+0,
+'%',
+'%',
+'%',
+'%',
+'%',
+0, 
+0,
+0,
+100,
+1 
+
+
+
+Proc_Get_Student_Attd_Percentage_New 5,2,'2018/07/23','2018/08/28',
+0,    
+0,    
+0,    
+0,
+'%',
+'%',
+'%',
+'%',
+'%',
+0,
+0,
+0,
+100,
+0 
+
+==============================
+
+select STD_STUDENT_BATCH_SEMESTER_nSemesterId,STD_SEMESTER_sSemesterName from STD_STUDENT_BATCH_SEMESTER_VIEW
+where STD_STUDENT_BATCH_nBatchId=232
+order by STD_SEMESTER_sSemesterName
+
+select STUDENT_BILL_SCHEDULE_MAIN_nSemesterId,STD_SEMESTER_sSemesterName,STUDENT_BILL_SCHEDULE_MAIN_nSlno,
+STUDENT_BILL_SCHEDULE_MAIN_nCategoryId,STUDENT_BILL_SCHEDULE_MAIN_nBillTypeId
+from STUDENT_BILL_SCHEDULE_MAIN_view where STUDENT_BILL_SCHEDULE_MAIN_nBatchId=232
+and STUDENT_BILL_SCHEDULE_MAIN_nCategoryId=1
+order by STUDENT_BILL_SCHEDULE_MAIN_nSlno
+
+
+select * from std_student_master
+where STD_STUDENT_MASTER_nBatchId=232 
+
+
+
+
+
+select 
+TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode,
+TIME_TABLE_TEMPLATE_FACULTY_nFacultyName,
+TIME_TABLE_TEMPLATE_FACULTY_nDayId,
+DAY_MASTER_sName,
+PERIOD_MASTER_TIME_TABLE_sDisplay,
+COUNT(*)
+from TIME_TABLE_TEMPLATE_FACULTY_WITH_PERIOD_VIEW
+where  TIME_TABLE_TEMPLATE_FACULTY_nCollegeId=2
+and TIME_TABLE_TEMPLATE_FACULTY_nAccsession=12
+and STD_SEMESTER_sType='E'
+group by TIME_TABLE_TEMPLATE_FACULTY_nFacultyCode,
+TIME_TABLE_TEMPLATE_FACULTY_nFacultyName,
+TIME_TABLE_TEMPLATE_FACULTY_nDayId,
+DAY_MASTER_sName,
+PERIOD_MASTER_TIME_TABLE_sDisplay
+having COUNT(*) >1
+order by TIME_TABLE_TEMPLATE_FACULTY_nFacultyName
+
+
+================CLASS DELETE=======================
+SELECT * INTO TIME_TABLE_DATEWISE_FACULTY_2019_03_01 FROM TIME_TABLE_DATEWISE_FACULTY
+GO
+SELECT * INTO TIME_TABLE_DATEWISE_2019_03_01 FROM TIME_TABLE_DATEWISE
+GO
+SELECT * INTO TIME_TABLE_DATEWISE_FACULTY_LP_2019_03_01 FROM TIME_TABLE_DATEWISE_FACULTY_LP
+GO
+
+SELECT * INTO Attendence_Student_Main_2019_03_01 FROM Attendence_Student_Main
+GO
+SELECT * INTO attendence_student_detail_2019_03_01 FROM attendence_student_detail
+GO
+SELECT * INTO attendence_faculty_detail_2019_03_01 FROM attendence_faculty_detail
+GO
+
+
+SELECT * from TIME_TABLE_DATEWISE_FACULTY_view
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=7
+and TIME_TABLE_DATEWISE_FACULTY_dDate>='2019/07/08'
+and TIME_TABLE_DATEWISE_FACULTY_dDate<='2019/07/08'
+and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode='sss/0064'
+and STD_SUBJECT_sSUBJECT_CODE='MI5'
+and TIME_TABLE_DATEWISE_FACULTY_nSubjectId=2516
+and TIME_TABLE_DATEWISE_FACULTY_nStreamId=4
+and TIME_TABLE_DATEWISE_FACULTY_nPeriodId in(6,7,8)
+
+
+
+SELECT * from TIME_TABLE_DATEWISE
+WHERE TIME_TABLE_DATEWISE_nCollegeId=3
+and TIME_TABLE_DATEWISE_dDate>='2019/05/21'
+and TIME_TABLE_DATEWISE_dDate<='2019/05/21'
+and TIME_TABLE_DATEWISE_nSubjectId=2156
+and TIME_TABLE_DATEWISE_nStreamId=10
+and TIME_TABLE_DATEWISE_nPeriodId in(7,8,9)
+
+
+
+
+
+select * from TIME_TABLE_DATEWISE_FACULTY_LP
+WHERE TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate>='2019/05/21'
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate<='2019/05/21'
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSubjectId=2156
+and TIME_TABLE_DATEWISE_FACULTY_LP_nStreamId=10
+and TIME_TABLE_DATEWISE_FACULTY_LP_nPeriodId in(7,8,9)
+and TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyCode='GIT/0002'
+
+
+
+
+SELECT * from Attendence_Student_Main
+WHERE Attendence_Student_Main_nCollegeId=3
+and Attendence_Student_Main_dDate>='2019/05/21'
+and Attendence_Student_Main_dDate<='2019/05/21'
+and Attendence_Student_Main_nSubjectId=2151
+and Attendence_Student_Main_nStreamId=10
+and Attendence_Student_Main_nPeriodId in(4)
+
+
+
+
+SELECT * from attendence_student_detail
+WHERE attendence_student_detail_nCollegeId=3
+and attendence_student_detail_dDate>='2019/05/21'
+and attendence_student_detail_dDate<='2019/05/21'
+and attendence_student_detail_nSubjectId=2128
+and attendence_student_detail_nStreamId=9
+and attendence_student_detail_nPeriodId in(7,8,9)
+
+
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=3
+and attendence_faculty_detail_dDate>='2019/05/21'
+and attendence_faculty_detail_dDate<='2019/05/21'
+and attendence_faculty_detail_nSubjectId=2156
+and attendence_faculty_detail_nStreamId=10
+and attendence_faculty_detail_nPeriodId in(7,8,9)
+and Attendence_Faculty_Detail_nFacultyCode='GIT/0002'
+
+
+
+=========================================
+
+
+===============deletion script for gnipst===========================
+SELECT * from TIME_TABLE_DATEWISE_FACULTY_view
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=5
+and TIME_TABLE_DATEWISE_FACULTY_dDate>='2019/02/25'
+and TIME_TABLE_DATEWISE_FACULTY_dDate<='2019/03/01'
+AND TIME_TABLE_DATEWISE_FACULTY_nCourseId IN(13,19)
+
+
+
+
+
+SELECT * from TIME_TABLE_DATEWISE
+WHERE TIME_TABLE_DATEWISE_nCollegeId=5
+and TIME_TABLE_DATEWISE_dDate>='2019/02/25'
+and TIME_TABLE_DATEWISE_dDate<='2019/03/01'
+AND TIME_TABLE_DATEWISE_nCourseId IN(13,19)
+
+
+select * from TIME_TABLE_DATEWISE_FACULTY_LP
+WHERE TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=5
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate>='2019/02/25'
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate<='2019/03/01'
+AND TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId IN(13,19)
+
+
+
+SELECT * from Attendence_Student_Main
+WHERE Attendence_Student_Main_nCollegeId=5
+and Attendence_Student_Main_dDate>='2019/02/25'
+and Attendence_Student_Main_dDate<='2019/03/01'
+AND Attendence_Student_Main_nCourseId IN(13,19)
+
+
+
+SELECT * from attendence_student_detail
+WHERE attendence_student_detail_nCollegeId=5
+and attendence_student_detail_dDate>='2019/02/25'
+and attendence_student_detail_dDate<='2019/03/01'
+AND attendence_student_detail_nCourseId IN(13,19)
+
+
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=5
+and attendence_faculty_detail_dDate>='2019/02/25'
+and attendence_faculty_detail_dDate<='2019/03/01'
+AND attendence_faculty_detail_nCourseId IN(13,19)
+
+
+==========================================
+
+==========================================
+select * from std_student_master where STD_STUDENT_MASTER_sStudentRoll='GNIHM/2018/0276'
+
+select * from STD_COLLEGE
+
+SELECT * from View_20
+WHERE attendence_student_detail_nCollegeId=6
+and attendence_student_detail_dDate='2019/03/01'
+and Attendence_Student_Detail_nStudentId=613348
+order by attendence_student_detail_nPeriodId
+
+
+
+select * from Semester_Section_Group_Student_Relation
+where Semester_Section_Group_Student_Relation_nStudentId=613348
+
+select * from Semester_Student_Relation where Semester_Student_Relation_nStudentId=613348
+========================================================
+
+SELECT * from TIME_TABLE_DATEWISE_FACULTY_view
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=10
+and TIME_TABLE_DATEWISE_FACULTY_dDate>='2019/03/29'
+and TIME_TABLE_DATEWISE_FACULTY_dDate<='2019/03/30'
+
+
+
+
+
+SELECT * from TIME_TABLE_DATEWISE
+WHERE TIME_TABLE_DATEWISE_nCollegeId=10
+and TIME_TABLE_DATEWISE_dDate>='2019/03/29'
+and TIME_TABLE_DATEWISE_dDate<='2019/03/30'
+
+
+select * from TIME_TABLE_DATEWISE_FACULTY_LP
+WHERE TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=10
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate>='2019/03/29'
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate<='2019/03/30'
+
+
+
+SELECT * from Attendence_Student_Main
+WHERE Attendence_Student_Main_nCollegeId=10
+and Attendence_Student_Main_dDate>='2019/03/29'
+and Attendence_Student_Main_dDate<='2019/03/30'
+
+
+
+SELECT * from attendence_student_detail
+WHERE attendence_student_detail_nCollegeId=10
+and attendence_student_detail_dDate>='2019/03/29'
+and attendence_student_detail_dDate<='2019/03/30'
+
+
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=10
+and attendence_faculty_detail_dDate>='2019/03/29'
+and attendence_faculty_detail_dDate<='2019/03/30'
+
+
+
+update TIME_TABLE_DATEWISE_FACULTY
+set TIME_TABLE_DATEWISE_FACULTY_nFacultyCode='GNIT/V/99',
+TIME_TABLE_DATEWISE_FACULTY_nFacultyName='ARINDAM BANERJEE',
+TIME_TABLE_DATEWISE_FACULTY_nFacultyShortName='AB1'
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_dDate='2019/04/17'
+AND TIME_TABLE_DATEWISE_FACULTY_nFacultyCode='GIT/0727'
+AND TIME_TABLE_DATEWISE_FACULTY_nPeriodId in(7,8,9)
+AND TIME_TABLE_DATEWISE_FACULTY_nSubjectId=2311
+
+=====================================
+SELECT * from TIME_TABLE_DATEWISE_FACULTY
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_dDate>='2019/05/13'
+and TIME_TABLE_DATEWISE_FACULTY_dDate<='2019/06/21'
+and TIME_TABLE_DATEWISE_FACULTY_nCourseId in(3,4,66)
+and TIME_TABLE_DATEWISE_FACULTY_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+SELECT * from TIME_TABLE_DATEWISE
+WHERE TIME_TABLE_DATEWISE_nCollegeId=3
+and TIME_TABLE_DATEWISE_dDate>='2019/05/13'
+and TIME_TABLE_DATEWISE_dDate<='2019/06/21'
+and TIME_TABLE_DATEWISE_nCourseId in(3,4,66)
+and TIME_TABLE_DATEWISE_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+
+select * from TIME_TABLE_DATEWISE_FACULTY_LP
+WHERE TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate>='2019/05/13'
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate<='2019/06/21'
+and TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId in(3,4,66)
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+
+
+
+SELECT * from Attendence_Student_Main
+WHERE Attendence_Student_Main_nCollegeId=3
+and Attendence_Student_Main_dDate>='2019/05/13'
+and Attendence_Student_Main_dDate<='2019/06/21'
+and Attendence_Student_Main_nCourseId in(3,4,66)
+and Attendence_Student_Main_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+
+
+
+
+SELECT * from attendence_student_detail
+WHERE attendence_student_detail_nCollegeId=3
+and attendence_student_detail_dDate>='2019/05/13'
+and attendence_student_detail_dDate<='2019/06/21'
+and attendence_student_detail_nCourseId in(3,4,66)
+and attendence_student_detail_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=3
+and attendence_faculty_detail_dDate>='2019/05/13'
+and attendence_faculty_detail_dDate<='2019/06/21'
+and attendence_faculty_detail_nCourseId in(3,4,66)
+and attendence_faculty_detail_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(2,4,6)
+)
+
+====================
+
+Proc_Get_Faculty_Attd_Percentage_New
+================================================
+
+
+===UPDATE SEM FOR GNIT/GNIHM==================
+use gnit_web_stf_db
+
+drop table t1
+go
+
+select * into t1 from Gnit_Web_Erp_Db.dbo.std_student_master
+go
+
+update std_student_master set std_student_master.STD_STUDENT_MASTER_nCurrSemesterId=t1.STD_STUDENT_MASTER_nCurrSemesterId,
+std_student_master.STD_STUDENT_MASTER_nCategoryId=t1.STD_STUDENT_MASTER_nCategoryId
+from t1 where std_student_master.STD_STUDENT_MASTER_nStudentId=t1.STD_STUDENT_MASTER_nStudentId
+
+
+
+
+
+
+========================================================
+ declare @P_COLLEGE_ID INT
+ declare @P_FROM_DATE DATETIME    
+ declare @P_TO_DATE DATETIME    
+ declare @P_BATCH INT    
+ declare @P_COURSE_ID INT    
+ declare @P_STREAM_ID INT    
+ declare @P_SEMESTER_ID INT    
+ declare @P_SECTION_ID INT  
+ declare @p_faculty_code varchar(20)
+ declare @p_day_id int
+ declare @p_period_id int
+ declare @p_sub_id int
+ declare @p_group_id int
+ declare @p_type int=0
+
+ set @P_COLLEGE_ID=3
+ set @P_FROM_DATE='2019/07/08'
+ set @P_TO_DATE ='2019/07/08'
+ set @P_BATCH =2017
+ set @P_COURSE_ID=55
+ set @P_STREAM_ID=27  
+ set @P_SEMESTER_ID=97    
+ set @P_SECTION_ID =1
+ set @p_faculty_code='GIT/0177'
+ set @p_day_id=2
+ set @p_period_id=8
+ set @p_sub_id=3125
+ set @p_group_id=3
+ set @p_type =1
+
+
+
+exec Proc_Delete_Date_Wise_Routine_Allotment_Single_Faculty
+ @P_COLLEGE_ID ,
+ @P_FROM_DATE ,    
+ @P_TO_DATE ,    
+ @P_BATCH ,    
+ @P_COURSE_ID ,    
+ @P_STREAM_ID ,    
+ @P_SEMESTER_ID ,    
+ @P_SECTION_ID ,  
+ @p_faculty_code ,
+ @p_day_id ,
+ @p_period_id ,
+ @p_sub_id ,
+ @p_group_id ,
+ @p_type 
+========================================================
+ 
+
+select * from pay_holiday_list where holi_cstcentre='GNIT' and holi_year=2019 and holi_date>='2019/07/01'
+
+select TIME_TABLE_DATEWISE_FACULTY_dDate from TIME_TABLE_DATEWISE_FACULTY where TIME_TABLE_DATEWISE_FACULTY_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_dDate in(
+select holi_date from pay_holiday_list where holi_cstcentre='GNIT' and holi_year=2019 and holi_date>='2019/07/01'
+)
+group by TIME_TABLE_DATEWISE_FACULTY_dDate
+
+======================================================
+USE Gnit_Web_Stf_Db
+GO
+
+DROP TABLE T1
+
+
+select * INTO T1 from Gnit_Web_Erp_Db.dbo.std_student_master where STD_STUDENT_MASTER_nStudentId not in(
+select STD_STUDENT_MASTER_nStudentId from std_student_master
+where STD_STUDENT_MASTER_sStudentRoll like 'GNIT/2019%'
+)
+AND STD_STUDENT_MASTER_sStudentRoll like 'GNIT/2019%'
+
+
+INSERT INTO std_student_master SELECT * FROM T1
+
+
+USE Gnit_Web_Stf_Db
+GO
+
+DROP TABLE T1
+
+
+select * INTO T1 from Gnit_Web_Erp_Db.dbo.std_student_batch where STD_STUDENT_BATCH_nBatchId not in(
+select STD_STUDENT_BATCH_nBatchId from std_student_batch
+)
+
+insert into std_student_batch
+select * from t1
+
+
+
+
+select * into t1  from gnit_web_erp_db.dbo.STD_STUDENT_BATCH_SEMESTER where STD_STUDENT_BATCH_SEMESTER_nBatchId not in(
+select STD_STUDENT_BATCH_SEMESTER_nBatchId from STD_STUDENT_BATCH_SEMESTER
+)
+
+
+insert into STD_STUDENT_BATCH_SEMESTER select * from t1
+
+
+
+select STD_STUDENT_BATCH_sBatchName,STD_STUDENT_MASTER_sRoutineBatchYr,STD_STUDENT_MASTER_sRoutineSemId,
+* from std_student_master_view
+where STD_STUDENT_MASTER_sStudentRoll like 'GNIT/2019%'
+and STD_STUDENT_BATCH_sBatchName like '%[L]%'
+and STD_STUDENT_BATCH_nCourseId=4
+order by STD_STUDENT_BATCH_sBatchName
+
+
+
+update std_student_master_view
+set STD_STUDENT_MASTER_sRoutineBatchYr=2018,STD_STUDENT_MASTER_sRoutineSemId=42
+where STD_STUDENT_MASTER_sStudentRoll like 'GNIT/2019%'
+and STD_STUDENT_BATCH_sBatchName like '%[L]%'
+and STD_STUDENT_BATCH_nCourseId=4
+
+
+

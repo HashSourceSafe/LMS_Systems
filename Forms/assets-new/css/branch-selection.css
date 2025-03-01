@@ -1,0 +1,106 @@
+.authentication-bg {
+   /* background: url(../assets/images/redirect.jpg) no-repeat left top fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;*/
+	background: #25306e;
+}
+
+.circle-wrapper {
+    position: relative;
+    z-index: 1;
+    height: 600px;
+    width: 1000px;
+    margin: 0px auto; margin-top:60px; 
+}
+.center{ width: 120px; height: 120px; background: #36a1d9; box-shadow: #333; position: absolute;top:0;bottom: 0;left: 0;right: 0; 	
+	margin: auto; border-radius: 50%; padding:15px;}
+.center-logo{ border-radius: 50%; background: #fff; padding:20px; box-shadow: 0px 0px 10px rgb(0, 0, 0, .5); position: relative;}
+.center-logo img{ width: 100%;}
+.right,.left{ position: absolute;}
+.line-rt{ background: url("../images/rt-line1.png"); width: 359px; height: 149px; top: -180px; left: 80px;}
+.line-lt{ background: url("../images/lt-line1.png"); width: 359px; height: 149px; top: -180px; right:80px;}
+
+.line-rb{ background: url("../images/rb-line1.png"); width: 359px; height: 149px; bottom: -180px; left: 80px;}
+.line-lb{ background: url("../images/lb-line1.png"); width: 359px; height: 149px; bottom: -180px; right:80px;}
+
+
+.line-rtm{ background: url("../images/rtm.png"); width: 287px; height: 91px; top: -80px; left: 140px;}
+.line-ltm{ background: url("../images/ltm.png"); width: 287px; height: 91px; top: -80px; right:140px;}
+
+.line-rbm{ background: url("../images/rbm.png"); width: 287px; height: 91px; bottom: -80px; left: 140px;}
+.line-lbm{ background: url("../images/lbm.png"); width: 287px; height: 91px; bottom: -80px; right:140px;}
+
+.line-rs{ background: url("../images/rs-line.png"); width: 128px; height: 10px; top: 60px; left: 150px;}
+.line-ls{ background: url("../images/ls-line.png"); width: 128px; height: 10px; top: 60px; right:150px;}
+
+
+.line-bs{ background: url("../images/ts.png"); width: 8px; height: 97px; top: -130px; right: 58px;}
+.line-ts{ background: url("../images/bs.png"); width: 8px; height: 97px; bottom: -130px; right:58px;}
+
+.rt{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 10px; right: -0px; }
+.lt{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 10px; left: -0px;}
+
+.rb{ width: 82px; height: 82px; border-radius: 30px; position: absolute; bottom: 0px; right: -0px;}
+.lb{ width: 82px; height: 82px; border-radius: 30px; position: absolute; bottom: 0px; left: -0px;}
+
+
+.rtm{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 120px; right: 80px; }
+.ltm{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 120px; left: 80px;}
+
+.rbm{ width: 82px; height: 82px; border-radius: 30px; position: absolute; bottom: 120px; right: 80px;}
+.lbm{ width: 82px; height: 82px; border-radius: 30px; position: absolute; bottom: 120px; left: 80px;}
+
+
+.ls{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 260px; left: 150px;}
+.rs{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 260px; right: 150px;}
+
+.bs{ width: 82px; height: 82px; border-radius: 30px; position: absolute; bottom: 10px; left: 460px;}
+.ts{ width: 82px; height: 82px; border-radius: 30px; position: absolute; top: 10px; left: 460px;}
+
+
+
+
+
+.cc-rockmenu .rolling {
+  display: inline-block;
+  cursor:pointer;
+  width: 82px;
+  height: 82px;
+  text-align:left;
+  overflow: hidden;
+  border-radius:41px;
+  background: #f3f3f4;
+  transition: all 0.3s ease-out;
+  white-space: nowrap;
+}
+.cc-rockmenu .rolling:hover {
+  width: 200px;
+}
+.cc-rockmenu .rolling .rolling_icon {
+  float:left;
+  z-index: 9;
+  display: inline-block;
+  width: 82px;
+  background: #fff;
+  height: 82px;
+  border-radius:50%;
+  box-sizing: border-box;
+  margin: 0 20px 0 0;
+}
+.cc-rockmenu .rolling .rolling_icon:hover .rolling {
+  width: 200px;
+}
+
+
+
+
+.cc-rockmenu .rolling span {
+    display: block;
+    font-weight: bold;
+    padding: 30px 0; font-size:22px;color: #26326e;
+}
+
+.logo {padding: 10px;}
+.logo img{ width: 100%;}

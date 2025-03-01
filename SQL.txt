@@ -1,0 +1,115 @@
+Chenges for PO-CO & Attenment Calculation
+------------------------------------------------
+
+Table
+-------------------------------------------
+poso_exam_main
+poso_exam_detail
+poco_bloom_taxanomy_master
+poco_exam_question_master
+poco_period
+poco_program_outcome
+poco_student_marks_detail
+poco_student_marks_main
+poco_subject_wise_attainment
+poco_subject_wise_co_master
+poco_subject_wise_co_po_mapping
+poco_subject_master_main_for_batch
+poco_subject_master_module_main_for_batch
+poco_subject_master_module_detail_for_batch
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD
+poco_upload_resource_type
+
+Table Edit
+------------
+
+alter table TIME_TABLE_DATEWISE_FACULTY_LP add TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId numeric(18,0) default 0,
+TIME_TABLE_DATEWISE_FACULTY_LP_nLecture int default 0
+
+go
+
+update TIME_TABLE_DATEWISE_FACULTY_LP set TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId=0,
+TIME_TABLE_DATEWISE_FACULTY_LP_nLecture=0 where TIME_TABLE_DATEWISE_FACULTY_LP_nLecture is null
+
+alter table STD_SUBJECT_MASTER_NEW add 
+STD_SUBJECT_SUBJECT_nStreamId int default 0,
+STD_SUBJECT_SUBJECT_nSemNo int default 0
+
+go
+
+update STD_SUBJECT_MASTER_NEW set STD_SUBJECT_SUBJECT_nStreamId=0,
+STD_SUBJECT_SUBJECT_nSemNo=0 where STD_SUBJECT_SUBJECT_nSemNo is null
+go
+
+
+Views
+---------------------------------------------
+poco_exam_question_master_view
+poco_student_marks_main_detail_view
+
+procedure
+-------------------------------------------------------------
+Proc_Disp_Poco_Subject_Wise_Co_Attainment
+Proc_Disp_Poco_Subject_Wise_Co_Attainment_Consolidated
+Proc_Disp_Poco_Subject_Wise_Co_Po_Mapping
+Proc_Generate_Poco_Subject_Wise_Attainment
+Proc_Get_Poco_Bloom_Taxanomy
+Proc_Get_Poco_Course_Outcome
+Proc_Get_Poco_Exam_Detail
+Proc_Get_Poco_Exam_Main
+Proc_Get_Poco_Exam_Test_Wise_Question_Id
+Proc_Get_Poco_Outcome_Type
+Proc_Get_Poco_Period
+Proc_Get_Poco_Prog_Outcome
+Proc_Get_Poco_Question_Master
+Proc_Get_Poco_Question_Vs_Co_Matrix
+Proc_Get_Poco_Student_List_For_Marks_Entry
+Proc_Get_Poco_Subject_Wise_Co
+Proc_Save_Poco_Question_Master
+Proc_Save_Poco_Student_Wise_Marks
+Proc_Save_Poco_Student_Wise_Marks_Detail
+Proc_Save_Poco_Student_Wise_Marks_Main
+Proc_Save_Poco_Subject_Wise_Copo_Mapping
+Proc_Save_Poco_Subject_Wise_Copo_Mapping_Detail
+Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Main_Detail
+Proc_Save_Lesson_plan_New
+Proc_Save_Lesson_plan_Resource
+Proc_Get_Poco_Resource_Type
+Proc_Save_Lesson_plan_Resource
+Proc_Delete_Lesson_plan_Resource
+Proc_Get_Student_Date_Wise_Routine_Calender
+Proc_Get_Subject_Wise_Lesson_plan_Resource
+Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance
+Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance_With_Subject
+Proc_Get_Poco_Module
+Proc_Save_Poco_Batch_Subject_Wise_Syllabus
+Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Main
+Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Detail
+Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Main
+Proc_Get_Poco_Batch_Subject_Wise_Syllabus_detail
+Proc_Get_Faculty_Wise_Lesson_plan_Main
+Proc_Get_Faculty_Wise_Lesson_plan_Resource
+Proc_Save_Program_Outcome_Mst
+Proc_Save_Course_Outcome_Mst
+Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Detail_Excel
+Proc_Save_Course_Outcome_Mst_Excel
+Proc_Save_Poco_Subject_Wise_Copo_Mapping_Excel
+Proc_Get_Attendence_percentage_For_Faculty
+Proc_Get_Attendence_percentage_For_Student
+
+
+edit
+------
+Proc_Get_Subject_details
+Proc_Save_Subject_master
+Proc_Save_Subject_Master_Main
+
+
+
+------------Menu-----------------------
+UPDATE MENUMST set MENUMST_sNAVIGATE_URL='frmQuestionPaperSetting.aspx'
+where MENUMST_nMENU_ID=51
+----------------------------------------------
+
+
+DeleteLessonPlanResource 

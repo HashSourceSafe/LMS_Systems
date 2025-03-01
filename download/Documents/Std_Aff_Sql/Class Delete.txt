@@ -1,0 +1,65 @@
+============All Class for Single Semester=========================
+
+SELECT * from TIME_TABLE_DATEWISE_FACULTY
+WHERE TIME_TABLE_DATEWISE_FACULTY_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_dDate>='2019/07/08'
+and TIME_TABLE_DATEWISE_FACULTY_dDate<='2019/07/31'
+and TIME_TABLE_DATEWISE_FACULTY_nCourseId=2
+and TIME_TABLE_DATEWISE_FACULTY_nSemesterId  in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+
+
+SELECT * from TIME_TABLE_DATEWISE
+WHERE TIME_TABLE_DATEWISE_nCollegeId=3
+and TIME_TABLE_DATEWISE_dDate>='2019/07/08'
+and TIME_TABLE_DATEWISE_dDate<='2019/07/31'
+and TIME_TABLE_DATEWISE_nCourseId=2
+and TIME_TABLE_DATEWISE_nSemesterId  in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+
+
+select * from TIME_TABLE_DATEWISE_FACULTY_LP
+WHERE TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=3
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate>='2019/07/08'
+and TIME_TABLE_DATEWISE_FACULTY_LP_dDate<='2019/07/31'
+and TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId=2
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId  in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+
+
+
+
+SELECT * from Attendence_Student_Main
+WHERE Attendence_Student_Main_nCollegeId=3
+and Attendence_Student_Main_dDate>='2019/07/08'
+and Attendence_Student_Main_dDate<='2019/07/31'
+and Attendence_Student_Main_nCourseId=2
+and Attendence_Student_Main_nSemesterId  in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+
+
+
+SELECT * from attendence_student_detail
+WHERE attendence_student_detail_nCollegeId=3
+and attendence_student_detail_dDate>='2019/07/08'
+and attendence_student_detail_dDate<='2019/07/31'
+and attendence_student_detail_nCourseId=2
+and attendence_student_detail_nSemesterId  in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+
+
+
+SELECT * from attendence_faculty_detail
+WHERE attendence_faculty_detail_nCollegeId=3
+and attendence_faculty_detail_dDate>='2019/07/08'
+and attendence_faculty_detail_dDate<='2019/07/31'
+and attendence_faculty_detail_nCourseId=2
+and attendence_faculty_detail_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_semester where STD_SEMESTER_nSemNo in(7)
+)
+

@@ -1,0 +1,11 @@
+frmBatchCourseStreamSemWiseSubjectSetting.aspx
+=================================================
+
+
+Proc_Get_Subject_for_SubjectRelation
+Proc_Save_BatchCourseStreamSemWiseSubject
+Proc_Save_BatchCourseStreamSemWiseSubject_Det
+
+
+STD_STREAM_WISE_SUBJECT
+

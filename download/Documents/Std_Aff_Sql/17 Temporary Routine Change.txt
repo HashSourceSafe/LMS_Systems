@@ -1,0 +1,73 @@
+TIME_TABLE_DATEWISE_CHANGE_REQUEST
+
+
+Proc_Populate_Routine_Acitivity
+Proc_Get_Faculty_Department
+proc_get_faculty_date_day_routine_new
+Proc_Check_Previous_Entry_For_Temporary_Routine_Change_Preparation
+PROC_UPDATE_TIME_TABLE_DATEWISE_CHANGE_REQUEST
+
+Proc_Save_Temporary_Routine_Change_Preparation
+Proc_Delete_Period_Main_Detail_Temporary_Routine
+Proc_Save_Add_Period
+
+Proc_Delete_Main_Period_Temporary_Routine_Change_Preparation
+Proc_Delete_Faculty_Period_Temp_Routine_Change_Prep
+
+Proc_Delete_Main_Period_Temporary_Routine_Change_Preparation
+Proc_Delete_Faculty_Period_Temp_Routine_Change_Prep
+
+
+Proc_save_AddMainPeriod
+Proc_save_AddFacultyPeriod
+
+proc_get_routine_change_req_new
+proc_get_faculty_date_day_routine
+
+Proc_Validate_Add_Special_Class
+Proc_Save_Add_Special_Class
+
+=======================================
+
+/****** Object:  Table [dbo].[TIME_TABLE_DATEWISE_CHANGE_REQUEST]    Script Date: 02/05/2018 12:35:31 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[TIME_TABLE_DATEWISE_CHANGE_REQUEST](
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nKeyId] [numeric](18, 0) IDENTITY(1,1) NOT NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nCollegeId] [int] NOT NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nUserId] [numeric](18, 0) NOT NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nDepeId] [int] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nAction] [int] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_sFromFacultyCode] [varchar](20) NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_sToFacultyCode] [varchar](20) NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_dFromDate] [datetime] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_dToDate] [datetime] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nFromPeriodId] [int] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nToPeriodId] [int] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_sRemarks] [varchar](100) NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nStat] [int] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_dEntryDate] [datetime] NULL,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_dAppDate] [datetime] NULL,
+ CONSTRAINT [PK_TIME_TABLE_DATEWISE_CHANGE_REQUEST] PRIMARY KEY CLUSTERED 
+(
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nKeyId] ASC,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nCollegeId] ASC,
+	[TIME_TABLE_DATEWISE_CHANGE_REQUEST_nUserId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[TIME_TABLE_DATEWISE_CHANGE_REQUEST] ADD  CONSTRAINT [DF_TIME_TABLE_DATEWISE_CHANGE_REQUEST_TIME_TABLE_DATEWISE_CHANGE_REQUEST_nStat]  DEFAULT ((0)) FOR [TIME_TABLE_DATEWISE_CHANGE_REQUEST_nStat]
+GO
+

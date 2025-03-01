@@ -1,0 +1,83 @@
+Login
+-----
+Proc_Get_STD_Affairs_User_new
+Proc_Get_STD_Affairs_User_Det
+Proc_Get_BackOffice_Menu
+
+
+==========================================
+alter table BACK_OFFICE_LOGINMST add 
+BACK_OFFICE_LOGINMST_nDeptId int default 0
+go
+
+update BACK_OFFICE_LOGINMST set BACK_OFFICE_LOGINMST_nDeptId=0
+where BACK_OFFICE_LOGINMST_nDeptId is null
+
+insert into MENUMST select * from JIS_UNIVERSITY_db.dbo.MENUMST
+
+insert into MENUACCESSMST select * from JIS_UNIVERSITY_db.dbo.MENUACCESSMST
+where MENUACCESSMST_nUSER_ID=1
+
+
+select * from MENUACCESSMST
+where MENUACCESSMST_nUSER_ID=1
+
+select * from BACK_OFFICE_LOGINMST where 
+
+
+UPDATE BACK_OFFICE_LOGINMST set BACK_OFFICE_LOGINMST_sLOGIN_NAME='admin-nit'
+where BACK_OFFICE_LOGINMST_sLOGIN_NAME='admin'
+
+update MENUACCESSMST set MENUACCESSMST_sLOGIN_NAME='admin-nit',
+MENUACCESSMST_nCOLLEGE_ID=2,MENUACCESSMST_nUSER_ID=100
+========================================================
+
+
+
+/****** Object:  Table [dbo].[emph]    Script Date: 12/19/2017 10:15:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[emph](
+	[emph_code] [varchar](15) NOT NULL,
+	[emph_name] [varchar](100) NULL,
+	[emph_ShortName] [varchar](90) NULL,
+	[emph_dob] [datetime] NULL,
+	[emph_doj] [datetime] NULL,
+	[emph_sex] [varchar](6) NULL,
+	[ExitFlag] [varchar](1) NOT NULL,
+	[ExitDate] [datetime] NULL,
+	[empl_password] [varchar](15) NULL,
+	[college_id] [int] NULL,
+	[emph_dept_id] [int] NULL,
+	[emph_desig] [varchar](100) NULL,
+	[emph_category] [varchar](100) NULL,
+ CONSTRAINT [PK_emph] PRIMARY KEY CLUSTERED 
+(
+	[emph_code] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_PADDING OFF
+GO
+
+ALTER TABLE [dbo].[emph] ADD  CONSTRAINT [DF_emph_ExitFlag]  DEFAULT ('N') FOR [ExitFlag]
+GO
+
+==========================================
+
+
+
+
+alter table MENUACCESSMST 
+add MENUACCESSMST_nUSER_ID int default 0
+
+=================================================

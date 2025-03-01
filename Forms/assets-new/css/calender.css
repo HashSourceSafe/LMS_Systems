@@ -1,0 +1,114 @@
+#calendar {
+
+    margin: 0 auto;
+    margin-top: 2%;
+    margin-bottom: 2%;
+    border-radius: 5px;
+    font-family: 'Open Sans', sans-serif;
+    text-align: center;
+    color: #000; line-height: 50px; 
+}
+
+#calendar span {
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 300;
+    color: #fff;
+    background: #ff2b48; padding:4px 9px; 
+}
+
+#calendar span.all-uplodaded { background: #018901}
+#calendar span.some-data-uplodaded { background: #ffb001; color: #000;} 
+#calendar table {
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-spacing: 0;
+    border-radius: 0 0 5px 5px;
+    width: 100%;
+}
+
+#calendar td {
+    width: 50px;
+    height: 50px;
+    background: #aebefa;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 6px;
+    cursor: pointer;
+    transition: background .3s;
+    -webkit-transition: background .3s;
+}
+
+#calendar .past {
+    color: #999;
+}
+
+#colHeader td {
+    background: #fff;
+}
+
+#calendar .booked {
+    background: #333;
+    font-weight: 700;
+    color: #fff;
+}
+
+#calendar .available {
+    background: #fff;
+    color: #000; font-weight: 600; font-size: 18px
+}
+
+#calHeader {
+    padding:10px;
+    background: #283675;
+    position: relative;
+}
+
+#calHeader div {
+    display: inline;
+    color: #fff;
+    cursor: pointer;
+    ;
+}
+
+.calHeader {
+    height: 50px;
+    background: #ee3333;
+    text-align: center;
+    position: relative;
+    z-index: 100;
+}
+
+#tabName {
+    color: #fff;
+    padding-bottom: 0px; font-size: 30px;
+}
+
+#left, #right {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    top: 50%;
+    margin-top: -7.5px;
+    cursor: pointer;
+}
+
+#left {
+    border-width: 7.5px 10px 7.5px 0;
+    border-color: transparent rgba(255, 255, 255, 1) transparent transparent;
+    left: 20px;
+}
+
+#right {
+    border-width: 7.5px 0 7.5px 10px;
+    border-color: transparent transparent transparent rgba(255, 255, 255, 1);
+    right: 20px;
+}
+
+.calender-newdesign{ border-radius: 10px;box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); position:absolute; left:0; top:40px; z-index:2; background:#fff;}
+.calender-newdesign table{  border:none;}
+.calender-newdesign table th,.calender-newdesign table td{ width:50px; height:auto; padding:4px; border:none;}
+.table-footer{  background:#333; width:100%; color:#fff;}
+.calender-newdesign table.table-footer td{ width:auto; line-height:40px;}
+.table-main-area{ margin:10px;}

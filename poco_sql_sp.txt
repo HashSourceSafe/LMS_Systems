@@ -1,0 +1,5373 @@
+﻿go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Disp_Poco_Subject_Wise_Co_Attainment] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_co_id numeric(18,0)
+)
+AS
+BEGIN
+--Proc_Disp_Poco_Subject_Wise_Co_Attainment 100,2,4,1,2936,6,1,1
+
+declare @sql as varchar(8000)
+declare @m_concat_field varchar(100)
+declare @m_field_name varchar(100)
+declare @m_student_id numeric(18,0)
+declare @m_obtained_marks varchar(10)
+
+declare @m_std_count numeric(18,2)
+declare @m_tot_score numeric(18,2)
+declare @m_avg_score numeric(18,2)
+
+
+
+create table #temp
+(
+sl numeric(18,0) identity(1,1),
+std_id  numeric(18,0),
+Code varchar(25),
+Roll varchar(25),
+[Student Name] varchar(100)
+)
+
+
+create table #temp1
+(
+std_id1  numeric(18,0),
+tot_marks numeric(18,2), 
+obtained_marks numeric(18,2),
+grade1 varchar(10),
+grade_to_percent numeric(18,2) default 0
+)
+
+
+/**Creating table field**/
+declare m_cursor CURSOR LOCAL for select poso_exam_detail_sSlNo+' - '+poco_exam_question_master_sQuestionNo +' ('+ ltrim(rtrim(str(poco_exam_question_master_nMarks)))+')'
+from poco_student_marks_main_detail_view
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nCoId=@p_co_id
+group by
+poso_exam_detail_sSlNo,
+poco_exam_question_master_sQuestionNo,
+poco_exam_question_master_nMarks
+order by 
+poso_exam_detail_sSlNo,
+poco_exam_question_master_sQuestionNo,
+poco_exam_question_master_nMarks
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @sql='alter table #temp add ' + @m_field_name +' varchar(10) default '''' '
+	exec (@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+alter table #temp add
+[Total Marks Attend] numeric(18,2) default 0,
+[Total Marks Obtained] numeric(18,2) default 0,
+[%] numeric(18,2) default 0,
+Score numeric(18,2) default 0,
+[TARGET >=60%] varchar(1) default 'N'
+
+/**************************************************/
+
+/********Inserting Student*********/
+insert into #temp(
+std_id,Code,Roll,[Student Name]
+)
+select STD_STUDENT_MASTER_nStudentId,STD_STUDENT_MASTER_sStudentRoll,
+STD_STUDENT_MASTER_sUniversity_Roll_No,STD_STUDENT_MASTER_sStudentName 
+from std_student_master_view
+where STD_COLLEGE_nBranchId=@p_branch_id
+and STD_STUDENT_BATCH_nCourseId=@p_course_id
+and STD_STUDENT_BATCH_nStreamMainId=@p_stream_id
+and STD_SEMESTER_nSemNo=@p_sem_no
+and STD_STUDENT_MASTER_cIsLeft='N'
+order by STD_STUDENT_MASTER_sUniversity_Roll_No
+
+
+/**********Calculation*******************/
+insert into #temp1(std_id1,tot_marks,obtained_marks,grade1)
+select poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade
+from poco_student_marks_main_detail_view
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nCoId=@p_co_id
+and poco_student_marks_detail_sFlag='ATTEND'
+group by poco_student_marks_main_nStudentId,
+poco_student_marks_detail_sGrade
+
+update #temp1 set grade_to_percent=90 where grade1='O'
+update #temp1 set grade_to_percent=80 where grade1='E'
+update #temp1 set grade_to_percent=70 where grade1='A'
+update #temp1 set grade_to_percent=60 where grade1='B'
+update #temp1 set grade_to_percent=50 where grade1='C'
+update #temp1 set grade_to_percent=40 where grade1='D'
+update #temp1 set grade_to_percent=0 where grade1='F'
+update #temp1 set grade_to_percent=0 where grade1='I'
+update #temp1 set grade_to_percent=-1 where grade1='NA'
+
+
+
+update #temp set [Total Marks Attend]=tot_marks,
+[Total Marks Obtained]=obtained_marks,[%]=grade_to_percent
+from #temp1 where std_id=std_id1
+
+update #temp set [%]=([Total Marks Obtained]/[Total Marks Attend])*100 where [Total Marks Attend]>0 AND [%]=-1
+update #temp set Score=3 where [%]>=60
+update #temp set Score=2 where [%]>=40 and [%]<60
+update #temp set Score=1 where [%]<40 
+
+update #temp set [TARGET >=60%]='Y' where [%]>=60
+
+update #temp set [Total Marks Obtained]=0 where [Total Marks Obtained]<0
+update #temp set [Total Marks Attend]=0 where [Total Marks Attend]<0
+update #temp set Score=0 where [Total Marks Attend]=0 and [Total Marks Obtained]=0
+
+
+/**Updating marks**/
+declare m_cursor CURSOR LOCAL for select poso_exam_detail_sSlNo+' - '+poco_exam_question_master_sQuestionNo +' ('+ ltrim(rtrim(str(poco_exam_question_master_nMarks)))+')',
+poco_student_marks_main_nStudentId,
+case when poco_student_marks_detail_nMarks>-1 then ltrim(rtrim(str(poco_student_marks_detail_nMarks))) else poco_student_marks_detail_sGrade end
+from poco_student_marks_main_detail_view
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nCoId=@p_co_id
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field,@m_student_id,@m_obtained_marks
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	if @m_obtained_marks='NA'
+	begin
+		set @m_obtained_marks=''
+	end
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @sql='update #temp set '+@m_field_name+'='''+@m_obtained_marks+''''
+	set @sql = @sql + ' where std_id='+LTRIM(rtrim(str(@m_student_id))) 
+	exec (@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field,@m_student_id,@m_obtained_marks
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+set @m_avg_score=0
+select @m_std_count=COUNT(*),@m_tot_score=SUM(Score) from #temp
+if @m_std_count>0
+begin
+	set @m_avg_score=@m_tot_score/@m_std_count 
+end
+
+insert into #temp(
+Code,
+score,
+[TARGET >=60%],
+[Total Marks Attend],
+[Total Marks Obtained],
+[%]
+) 
+select 'Avg',@m_avg_score,'',null,null,null
+
+
+select * from #temp order by sl
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[Proc_Disp_Poco_Subject_Wise_Co_Attainment_Consolidated] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int
+)
+AS
+BEGIN
+--Proc_Disp_Poco_Subject_Wise_Co_Attainment_Consolidated  100,2,4,1,2936,6,1
+
+declare @sql as varchar(8000)
+declare @m_co_id numeric(18,0)
+
+declare @m_std_count numeric(18,2)
+declare @m_score_count numeric(18,2)
+
+declare @m_cie_percentage numeric(18,2)
+declare @m_cie_level numeric(18,2)
+
+declare @m_see_level numeric(18,2)
+
+declare @m_overall_co_attainment numeric(18,2)
+
+
+
+
+create table #temp
+(
+sl numeric(18,0) identity(1,1),
+co_id numeric(18,0),
+co_name varchar(1000),
+average  numeric(18,2) default 0,
+g_60  numeric(18,2) default 0,
+b_40_60  numeric(18,2) default 0,
+l_40  numeric(18,2) default 0,
+Level_Achived numeric(18,2) default 0
+)
+
+
+create table #temp1
+(
+co_id1 numeric(18,0),
+std_id1  numeric(18,0),
+tot_marks numeric(18,2), 
+obtained_marks numeric(18,2) default 0,
+pcent1 numeric(18,2) default 0,
+Score1 numeric(18,2) default 0,
+grade1 varchar(10),
+grade_to_percent numeric(18,2) default 0
+)
+
+create table #temp_po
+(
+po_id int,
+po_name varchar(100),
+scale numeric(18,2),
+score  numeric(18,2),
+caption varchar(200) default ''
+)
+
+create table #temp_po1
+(
+po_id1 int,
+scale1 numeric(18,2)
+)
+
+
+
+/**********Calculation Question Based*******************/
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade
+from poco_student_marks_main_detail_view
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_student_marks_detail_sFlag='ATTEND'
+and poco_subject_wise_co_master_sCoNo<>'DIRECT' 
+group by poco_exam_question_master_nCoId,
+poco_student_marks_main_nStudentId,
+poco_student_marks_detail_sGrade
+
+
+update #temp1 set pcent1=(obtained_marks/tot_marks)*100 where tot_marks>0 and grade1='NA'
+
+
+
+
+
+
+
+update #temp1 set Score1=3 where pcent1>=60
+update #temp1 set Score1=2 where pcent1>=40 and pcent1<60
+update #temp1 set Score1=1 where pcent1<40 
+
+
+insert into #temp(
+co_id,average
+)
+select co_id1,AVG(Score1)
+from #temp1 
+group by co_id1
+order by co_id1
+
+declare m_cursor CURSOR LOCAL for select co_id from #temp
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_co_id
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	select @m_std_count=COUNT(*) from #temp1 where co_id1=@m_co_id
+	
+	select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=3
+	update #temp set g_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0
+	
+	select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=2
+	update #temp set b_40_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0
+	
+	select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=1
+	update #temp set l_40=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0
+	
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_co_id
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+update #temp set Level_Achived=3 where g_60>=80
+update #temp set Level_Achived=2 where g_60>=70 and g_60<80
+update #temp set Level_Achived=1 where g_60>=60 and g_60<70
+
+update #temp set co_name=poco_subject_wise_co_master_sCoNo from poco_subject_wise_co_master
+where co_id=poco_subject_wise_co_master_nRowId
+
+
+/********CIE % calculation**********/
+select @m_cie_percentage=avg(g_60) from #temp where co_name<>'DIRECT'
+if @m_cie_percentage>=80
+begin
+	set @m_cie_level=3
+end
+else if @m_cie_percentage>=70 and @m_cie_percentage<80
+begin
+	set @m_cie_level=2
+end
+else if @m_cie_percentage>=60 and @m_cie_percentage<70
+begin
+	set @m_cie_level=1
+end
+else
+begin
+	set @m_cie_level=0
+end
+
+insert into #temp(co_name,g_60,Level_Achived)
+select 'Avg CO Attainment Through CIE',@m_cie_percentage,@m_cie_level
+
+/**********Calculation Grade Based*******************/
+delete from #temp1
+
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade
+from poco_student_marks_main_detail_view
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_student_marks_detail_sFlag='ATTEND'
+and poco_subject_wise_co_master_sCoNo='DIRECT' 
+group by poco_exam_question_master_nCoId,
+poco_student_marks_main_nStudentId,
+poco_student_marks_detail_sGrade
+
+update #temp1 set pcent1=90 where grade1='O'
+update #temp1 set pcent1=80 where grade1='E'
+update #temp1 set pcent1=70 where grade1='A'
+update #temp1 set pcent1=60 where grade1='B'
+update #temp1 set pcent1=50 where grade1='C'
+update #temp1 set pcent1=40 where grade1='D'
+update #temp1 set pcent1=0 where grade1='F'
+update #temp1 set pcent1=0 where grade1='I'
+
+set @m_see_level=0
+
+select @m_std_count=count(*) from #temp1
+select @m_score_count=COUNT(*) from #temp1 where pcent1>=60
+
+if (@m_score_count/@m_std_count)*100>=80
+begin
+	set @m_see_level=3 
+end
+else if (@m_score_count/@m_std_count)*100>=70 and (@m_score_count/@m_std_count)*100<80
+begin
+	set @m_see_level=2 
+end
+else if (@m_score_count/@m_std_count)*100>=60 and (@m_score_count/@m_std_count)*100<70
+begin
+	set @m_see_level=1 
+end
+
+
+insert into #temp(co_name,g_60,Level_Achived)
+select 'CO attainment through SEE',(@m_score_count/@m_std_count)*100,@m_see_level
+
+set @m_overall_co_attainment=(@m_cie_level*40.0)/100.0 + (@m_see_level*60.0)/100.0
+
+
+insert into #temp(co_name,Level_Achived)
+select 'Overall CO attainment in the scale of 3', @m_overall_co_attainment
+
+
+/*****PO attainment calculation******/
+insert into #temp(co_name) select 'PO attainment  as follows'
+
+insert into #temp_po(po_id,po_name) 
+select poco_program_outcome_nRowId,poco_program_outcome_sNo
+from poco_program_outcome where poco_program_outcome_nPeriod=@p_period_id	
+and poco_program_outcome_nCourseId=@p_course_id	
+and poco_program_outcome_nType=1
+order by poco_program_outcome_nRowId
+
+insert into #temp_po1(po_id1,scale1) 
+select poco_subject_wise_co_po_mapping_nPoId,AVG(poco_subject_wise_co_po_mapping_nScale)
+from poco_subject_wise_co_po_mapping
+where poco_subject_wise_co_po_mapping_nScale>0
+and poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id
+group by poco_subject_wise_co_po_mapping_nPoId
+
+update #temp_po set scale=scale1 from #temp_po1 where po_id=po_id1
+
+update #temp_po set score=(scale/3.00)*@m_overall_co_attainment
+update #temp_po set caption=po_name+':- ' + LTRIM(rtrim(str(score,7,2))) + ' / ' + LTRIM(rtrim(str(scale,7,2))) 
+
+insert into #temp(co_name) select caption from #temp_po
+/************************************/
+
+
+select * from #temp order by sl
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[Proc_Disp_Poco_Subject_Wise_Co_Po_Mapping] 
+(
+@p_branch_id int,
+@p_period_id int,
+@p_course_id numeric(18,0),
+@p_subject_id numeric(18,0),
+@p_is_matrix int=1
+
+)
+AS
+BEGIN
+--Proc_Disp_Poco_Subject_Wise_Co_Po_Mapping 100,1,2,2936
+
+declare @sql as varchar(8000)
+declare @m_po_id numeric(18,0)
+declare @m_po_no varchar(100)
+declare @m_co_id numeric(18,0)
+declare @m_co_no varchar(100)
+declare @m_field_name varchar(100)
+declare @m_avg numeric(18,2)
+
+create table #temp_matrix
+(
+sl numeric(18,0) identity(1,1),
+co_id  numeric(18,0),
+CO  varchar(50)
+)
+
+create table #temp_verticle
+(
+sl numeric(18,0) identity(1,1),
+co_id  numeric(18,0),
+co_desp  varchar(50),
+po_id numeric(18,0),
+po_no varchar(50),
+scale numeric(18,2) default 0
+)
+
+
+create table #temp1
+(
+co_id1  numeric(18,0),
+po_id1 numeric(18,0),
+scale1 numeric(18,2) default 0
+
+)
+
+insert into #temp1(
+co_id1,po_id1,scale1
+)
+select poco_subject_wise_co_po_mapping_nCoId,poco_subject_wise_co_po_mapping_nPoId,poco_subject_wise_co_po_mapping_nScale
+from poco_subject_wise_co_po_mapping
+where poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id
+and poco_subject_wise_co_po_mapping_nSubjectId=@p_subject_id
+
+
+
+/**Creating copo matrix data start**/
+declare m_cursor CURSOR LOCAL for select poco_program_outcome_nRowId,poco_program_outcome_sNo
+from poco_program_outcome
+where poco_program_outcome_nCourseId=@p_course_id
+and poco_program_outcome_nPeriod=@p_period_id
+and poco_program_outcome_nType=1
+order by 
+poco_program_outcome_nRowId
+
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_po_id,@m_po_no
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_po_no+']'
+	set @sql='alter table #temp_matrix add ' + @m_field_name +' varchar(10) default '''' '
+	exec (@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_po_id,@m_po_no
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+
+insert into #temp_matrix(co_id,CO)
+select poco_subject_wise_co_master_nRowId,poco_subject_wise_co_master_sCoNo
+from poco_subject_wise_co_master where poco_subject_wise_co_master_nPeriodId=@p_period_id
+and poco_subject_wise_co_master_nSubjectId=@p_subject_id
+and poco_subject_wise_co_master_sCoNo<>'DIRECT'
+order by poco_subject_wise_co_master_nRowId
+
+insert into #temp_matrix(co_id,CO)
+select 0,'AVG'
+
+--Updating saved data
+declare m_cursor CURSOR LOCAL for select poco_program_outcome_nRowId,poco_program_outcome_sNo
+from poco_program_outcome
+where poco_program_outcome_nCourseId=@p_course_id
+and poco_program_outcome_nPeriod=@p_period_id
+and poco_program_outcome_nType=1
+order by 
+poco_program_outcome_nRowId
+
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_po_id,@m_po_no
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_po_no+']'
+	
+	set @sql='update #temp_matrix set ' + @m_field_name + '=ltrim(str(scale1)) from #temp1' 
+	set @sql=@sql + ' where co_id=co_id1 and po_id1='+LTRIM(str(@m_po_id))
+	exec (@sql)
+	
+	set @sql='update #temp_matrix set ' + @m_field_name + '='''' where ' + @m_field_name +'=''0'''
+	exec (@sql)
+	
+	select @m_avg=AVG(scale1) from #temp1 where po_id1=@m_po_id and scale1>0
+	if @m_avg>0
+	begin
+		set @sql='update #temp_matrix set ' + @m_field_name + '=' + LTRIM(str(@m_avg,5,2)) + ' where co_id=0'
+		exec (@sql)	
+	end
+		
+
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_po_id,@m_po_no
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+
+/**Creating copo matrix data end**/
+
+
+
+/**Creating copo verticle data start**/
+declare m_cursor CURSOR LOCAL for select poco_subject_wise_co_master_nRowId,poco_subject_wise_co_master_sCoNo
+from poco_subject_wise_co_master where poco_subject_wise_co_master_nPeriodId=@p_period_id
+and poco_subject_wise_co_master_nSubjectId=@p_subject_id
+and poco_subject_wise_co_master_sCoNo<>'DIRECT'
+order by poco_subject_wise_co_master_nRowId
+
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_co_id,@m_co_no
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	insert into #temp_verticle(po_id,po_no,co_id,co_desp)
+	select poco_program_outcome_nRowId,poco_program_outcome_sNo,@m_co_id,@m_co_no
+	from poco_program_outcome
+	where poco_program_outcome_nCourseId=@p_course_id
+	and poco_program_outcome_nPeriod=@p_period_id
+	and poco_program_outcome_nType=1
+	order by 
+	poco_program_outcome_nRowId
+	
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_co_id,@m_co_no
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+update #temp_verticle set scale=scale1 from #temp1
+where po_id=po_id1
+and co_id=co_id1
+
+/**Creating copo verticle data end**/
+
+
+
+if @p_is_matrix=1
+begin
+	select * from #temp_matrix order by sl
+end
+else if @p_is_matrix=2
+begin
+	select * from #temp_verticle order by sl
+end
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+  
+  
+CREATE PROCEDURE [dbo].[Proc_Generate_Poco_Subject_Wise_Attainment]   
+(  
+@p_branch_id int,  
+@p_course_id int,  
+@p_stream_id int,  
+@p_period_id int,  
+@p_subject_id numeric(18,0),  
+@p_sem_no int,  
+@p_exam_main_id int  
+)  
+AS  
+BEGIN  
+--Proc_Generate_Poco_Subject_Wise_Attainment  100,2,4,1,2936,6,1  
+  
+declare @sql as varchar(8000)  
+declare @m_co_id numeric(18,0)  
+  
+declare @m_std_count numeric(18,2)  
+declare @m_score_count numeric(18,2)  
+  
+declare @m_cie_percentage numeric(18,2)  
+declare @m_cie_level numeric(18,2)  
+  
+declare @m_see_level numeric(18,2)  
+  
+declare @m_overall_co_attainment numeric(18,2)  
+  
+  
+  
+  
+create table #temp  
+(  
+sl numeric(18,0) identity(1,1),  
+co_id numeric(18,0),  
+co_name varchar(1000),  
+copo_type varchar(10) default '',
+average  numeric(18,2) default 0,  
+g_60  numeric(18,2) default 0,  
+b_40_60  numeric(18,2) default 0,  
+l_40  numeric(18,2) default 0,  
+Level_Achived numeric(18,2) default 0,
+scale numeric(18,2)  default 0,  
+score  numeric(18,2)  default 0   
+)  
+  
+  
+create table #temp1  
+(  
+co_id1 numeric(18,0),  
+std_id1  numeric(18,0),  
+tot_marks numeric(18,2),   
+obtained_marks numeric(18,2) default 0,  
+pcent1 numeric(18,2) default 0,  
+Score1 numeric(18,2) default 0,  
+grade1 varchar(10),  
+grade_to_percent numeric(18,2) default 0
+)  
+  
+create table #temp_po  
+(  
+po_id int,  
+po_name varchar(100),  
+scale numeric(18,2),  
+score  numeric(18,2),  
+caption varchar(200) default ''  
+)  
+  
+create table #temp_po1  
+(  
+po_id1 int,  
+scale1 numeric(18,2)  
+)  
+  
+  
+  
+/**********Calculation Question Based*******************/  
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)  
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade  
+from poco_student_marks_main_detail_view  
+where poco_student_marks_main_nBranchId=@p_branch_id  
+and poco_student_marks_main_nCourseId=@p_course_id  
+and poco_student_marks_main_nStreamId=@p_stream_id  
+and poco_student_marks_main_nSemNo=@p_sem_no  
+and poco_student_marks_main_nSubjectId=@p_subject_id  
+and poco_student_marks_main_nPeriodId=@p_period_id  
+and poco_student_marks_main_nExamMainId=@p_exam_main_id  
+and poco_student_marks_detail_sFlag='ATTEND'  
+and poco_subject_wise_co_master_sCoNo<>'DIRECT'   
+group by poco_exam_question_master_nCoId,  
+poco_student_marks_main_nStudentId,  
+poco_student_marks_detail_sGrade  
+
+  
+  
+update #temp1 set pcent1=(obtained_marks/tot_marks)*100 where tot_marks>0 and grade1='NA'  
+  
+  
+  
+  
+  
+  
+  
+update #temp1 set Score1=3 where pcent1>=60  
+update #temp1 set Score1=2 where pcent1>=40 and pcent1<60  
+update #temp1 set Score1=1 where pcent1<40   
+  
+  
+insert into #temp(  
+co_id,average  
+)  
+select co_id1,AVG(Score1)  
+from #temp1   
+group by co_id1  
+order by co_id1  
+
+update #temp set copo_type='CO'
+
+  
+declare m_cursor CURSOR LOCAL for select co_id from #temp  
+OPEN m_cursor   
+FETCH NEXT FROM m_cursor   
+INTO @m_co_id  
+WHILE @@FETCH_STATUS = 0  
+BEGIN  
+   
+ select @m_std_count=COUNT(*) from #temp1 where co_id1=@m_co_id  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=3  
+ update #temp set g_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=2  
+ update #temp set b_40_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=1  
+ update #temp set l_40=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+  
+ FETCH NEXT FROM m_cursor   
+ INTO @m_co_id  
+END  
+CLOSE m_cursor   
+DEALLOCATE m_cursor   
+  
+update #temp set Level_Achived=3 where g_60>=80  
+update #temp set Level_Achived=2 where g_60>=70 and g_60<80  
+update #temp set Level_Achived=1 where g_60>=60 and g_60<70  
+  
+update #temp set co_name=poco_subject_wise_co_master_sCoNo from poco_subject_wise_co_master  
+where co_id=poco_subject_wise_co_master_nRowId  
+  
+  
+/********CIE % calculation**********/  
+select @m_cie_percentage=avg(g_60) from #temp where co_name<>'DIRECT'  
+if @m_cie_percentage>=80  
+begin  
+ set @m_cie_level=3  
+end  
+else if @m_cie_percentage>=70 and @m_cie_percentage<80  
+begin  
+ set @m_cie_level=2  
+end  
+else if @m_cie_percentage>=60 and @m_cie_percentage<70  
+begin  
+ set @m_cie_level=1  
+end  
+else  
+begin  
+ set @m_cie_level=0  
+end  
+  
+insert into #temp(co_name,g_60,Level_Achived,copo_type)  
+select 'Avg CO Attainment Through CIE',@m_cie_percentage,@m_cie_level,'AVG_CIE'  
+
+
+  
+/**********Calculation Grade Based*******************/  
+delete from #temp1  
+  
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)  
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade  
+from poco_student_marks_main_detail_view  
+where poco_student_marks_main_nBranchId=@p_branch_id  
+and poco_student_marks_main_nCourseId=@p_course_id  
+and poco_student_marks_main_nStreamId=@p_stream_id  
+and poco_student_marks_main_nSemNo=@p_sem_no  
+and poco_student_marks_main_nSubjectId=@p_subject_id  
+and poco_student_marks_main_nPeriodId=@p_period_id  
+and poco_student_marks_main_nExamMainId=@p_exam_main_id  
+and poco_student_marks_detail_sFlag='ATTEND'  
+and poco_subject_wise_co_master_sCoNo='DIRECT'   
+group by poco_exam_question_master_nCoId,  
+poco_student_marks_main_nStudentId,  
+poco_student_marks_detail_sGrade  
+  
+update #temp1 set pcent1=90 where grade1='O'  
+update #temp1 set pcent1=80 where grade1='E'  
+update #temp1 set pcent1=70 where grade1='A'  
+update #temp1 set pcent1=60 where grade1='B'  
+update #temp1 set pcent1=50 where grade1='C'  
+update #temp1 set pcent1=40 where grade1='D'  
+update #temp1 set pcent1=0 where grade1='F'  
+update #temp1 set pcent1=0 where grade1='I'  
+  
+set @m_see_level=0  
+  
+select @m_std_count=count(*) from #temp1  
+select @m_score_count=COUNT(*) from #temp1 where pcent1>=60  
+  
+if (@m_score_count/@m_std_count)*100>=80  
+begin  
+ set @m_see_level=3   
+end  
+else if (@m_score_count/@m_std_count)*100>=70 and (@m_score_count/@m_std_count)*100<80  
+begin  
+ set @m_see_level=2   
+end  
+else if (@m_score_count/@m_std_count)*100>=60 and (@m_score_count/@m_std_count)*100<70  
+begin  
+ set @m_see_level=1   
+end  
+  
+  
+insert into #temp(co_name,g_60,Level_Achived,copo_type)  
+select 'CO attainment through SEE',(@m_score_count/@m_std_count)*100,@m_see_level,'AVG_SEE'  
+
+
+  
+set @m_overall_co_attainment=(@m_cie_level*40.0)/100.0 + (@m_see_level*60.0)/100.0  
+  
+  
+insert into #temp(co_name,Level_Achived,copo_type)  
+select 'Overall CO attainment in the scale of 3', @m_overall_co_attainment,'FINAL_CO'  
+
+
+  
+  
+/*****PO attainment calculation******/  
+ 
+insert into #temp_po(po_id,po_name)   
+select poco_program_outcome_nRowId,poco_program_outcome_sNo  
+from poco_program_outcome where poco_program_outcome_nPeriod=@p_period_id   
+and poco_program_outcome_nCourseId=@p_course_id   
+and poco_program_outcome_nType=1  
+order by poco_program_outcome_nRowId  
+  
+insert into #temp_po1(po_id1,scale1)   
+select poco_subject_wise_co_po_mapping_nPoId,AVG(poco_subject_wise_co_po_mapping_nScale)  
+from poco_subject_wise_co_po_mapping  
+where poco_subject_wise_co_po_mapping_nScale>0  
+and poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id  
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id  
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+group by poco_subject_wise_co_po_mapping_nPoId  
+  
+update #temp_po set scale=scale1 from #temp_po1 where po_id=po_id1  
+  
+update #temp_po set score=(scale/3.00)*@m_overall_co_attainment  
+update #temp_po set caption=po_name  
+  
+insert into #temp(co_id,co_name,scale,score,copo_type) select po_id,caption,scale,score,'PO' from #temp_po  
+/************************************/  
+
+update #temp set co_id=0 where co_id is null
+
+delete from  poco_subject_wise_attainment where poco_subject_wise_attainment_nBranchId=@p_branch_id
+and poco_subject_wise_attainment_nPeriodId=@p_period_id
+and poco_subject_wise_attainment_nSubjectId=@p_subject_id
+
+
+insert into poco_subject_wise_attainment(
+poco_subject_wise_attainment_nBranchId,
+poco_subject_wise_attainment_nPeriodId,
+poco_subject_wise_attainment_nSubjectId,
+poco_subject_wise_attainment_nSl,
+poco_subject_wise_attainment_sType,
+poco_subject_wise_attainment_nCoPoId,
+poco_subject_wise_attainment_sDesp,
+poco_subject_wise_attainment_sAvg,
+poco_subject_wise_attainment_s60,
+poco_subject_wise_attainment_s40_60,
+poco_subject_wise_attainment_s40,
+poco_subject_wise_attainment_sLevel,
+poco_subject_wise_attainment_sPoScale,
+poco_subject_wise_attainment_sPoAttainment
+)
+select 
+@p_branch_id,@p_period_id,@p_subject_id,sl,
+copo_type,
+co_id,
+co_name,
+ltrim(str(average,7,2)),
+g_60,	
+b_40_60	,
+l_40,
+Level_Achived,	
+scale,	
+score
+from #temp
+
+  
+END  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+create PROCEDURE [dbo].[Proc_Get_Poco_Bloom_Taxanomy] 
+(
+	@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+
+
+
+select 
+poco_bloom_taxanomy_master_nId as bloom_id,
+poco_bloom_taxanomy_master_sDesp as bloom_name
+from poco_bloom_taxanomy_master order by poco_bloom_taxanomy_master_nId
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+create PROCEDURE [dbo].[Proc_Get_Poco_Course_Outcome] 
+(
+
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+create table #temp
+(
+co_rowId int,
+co_no varchar(50),
+co_details  varchar(8000)
+)
+
+insert into #temp(
+co_rowId,
+co_no,
+co_details
+)
+select 
+poco_subject_wise_co_master_nRowId,
+poco_subject_wise_co_master_sCoNo,
+poco_subject_wise_co_master_sDetails
+from poco_subject_wise_co_master
+where poco_subject_wise_co_master_nPeriodId=@p_period_id
+and poco_subject_wise_co_master_nSubjectId=@p_subject_id
+
+select * from #temp order by co_rowId
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Exam_Detail]             
+(            
+ @p_exam_id int,
+ @p_name varchar(50)='%'           
+)            
+AS            
+begin       
+
+create table #temp
+(
+poso_exam_detail_nId numeric(18,0) ,
+poso_exam_detail_sRowId numeric(18,0),
+poso_exam_detail_sSlNo varchar(50),
+poso_exam_detail_sDesp varchar(8000),
+poso_exam_detail_nType int,
+poso_exam_detail_nFullMarks  numeric(18,2),
+poso_exam_detail_nIsMarks int,
+q_count int default 0
+)
+
+create table #temp1
+(
+test_id numeric(18,0),
+ctr int
+)
+
+
+insert into #temp(
+poso_exam_detail_nId,
+poso_exam_detail_sRowId,
+poso_exam_detail_sSlNo,
+poso_exam_detail_sDesp,
+poso_exam_detail_nType,
+poso_exam_detail_nFullMarks,
+poso_exam_detail_nIsMarks
+)
+select 
+poso_exam_detail_nId,
+poso_exam_detail_sRowId,
+poso_exam_detail_sSlNo,
+poso_exam_detail_sDesp,
+poso_exam_detail_nType,
+poso_exam_detail_nFullMarks,
+poso_exam_detail_nIsMarks
+from poso_exam_detail 
+where poso_exam_detail_nId=@p_exam_id
+and poso_exam_detail_sDesp like @p_name
+
+
+insert into #temp1(test_id,ctr)
+select poco_exam_question_master_nExamDetailId,COUNT(*)
+from poco_exam_question_master
+group by poco_exam_question_master_nExamDetailId
+
+update #temp set q_count=ctr from #temp1 where test_id=poso_exam_detail_sRowId
+
+select * from #temp
+order by poso_exam_detail_sSlNo
+            
+end 
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Exam_Main]             
+(            
+ @p_course_id int,
+ @p_name varchar(50)='%'           
+)            
+AS            
+begin       
+
+select 
+poso_exam_main_nId as exam_id,	
+poso_exam_main_nCourse as course_id,	
+poso_exam_main_sExamName as exam_name,	
+poso_exam_main_sSemType as sem_type
+from poso_exam_main 
+where poso_exam_main_nCourse=@p_course_id
+and poso_exam_main_sExamName like @p_name
+order by poso_exam_main_sExamName
+            
+end 
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Exam_Test_Wise_Question_Id] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_test_id numeric(18,0)
+)
+AS
+BEGIN
+
+
+
+
+create table #temp
+(
+q_id numeric(18,0),
+q_no varchar(50),
+q_marks numeric(18,2),
+q_type int
+)
+
+insert into #temp(q_id,q_no,q_marks,q_type)
+select poco_exam_question_master_nQuestionId,
+poco_exam_question_master_sQuestionNo,
+poco_exam_question_master_nMarks,
+poco_exam_question_master_nIsActive
+from poco_exam_question_master
+where poco_exam_question_master_nBranchId=@p_branch_id
+and poco_exam_question_master_nPeriodId=@p_period_id
+and poco_exam_question_master_nCourseId=@p_course_id
+and poco_exam_question_master_nSubjectId=@p_subject_id
+and poco_exam_question_master_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nExamDetailId=@p_exam_test_id
+and poco_exam_question_master_nIsActive=1
+order by poco_exam_question_master_nQuestionId
+
+select * from #temp order by q_id
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+create PROCEDURE [dbo].[Proc_Get_Poco_Outcome_Type] 
+(
+	@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+create table #temp
+(
+outcome_id int,
+outcome_name varchar(50)
+)
+
+insert into #temp(outcome_id,outcome_name) select 1,'PO'
+insert into #temp(outcome_id,outcome_name) select 2,'PSO'
+insert into #temp(outcome_id,outcome_name) select 3,'PEO'
+
+
+select * from #temp order by outcome_id
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Period] 
+(
+	@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+
+
+
+select 
+poco_period_nId as period_id,
+poco_period_sDesp as period_name
+from poco_period order by poco_period_sDesp
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Prog_Outcome] 
+(
+
+@p_period_id int,
+@p_course_id int,
+@p_type_id int,
+@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+create table #temp
+(
+po_rowId int,
+po_no varchar(50),
+po_desp varchar(8000),
+po_details  varchar(8000)
+)
+
+insert into #temp(
+po_rowId,
+po_no,
+po_desp,
+po_details
+)
+select 
+poco_program_outcome_nRowId,
+poco_program_outcome_sNo,
+poco_program_outcome_sDesp,
+poco_program_outcome_sDetails
+from poco_program_outcome
+where poco_program_outcome_nPeriod=@p_period_id
+and poco_program_outcome_nCourseId=@p_course_id
+and poco_program_outcome_nType=@p_type_id
+
+select * from #temp order by po_rowId
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Question_Master] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_detail_id int
+)
+AS
+BEGIN
+
+create table #temp
+(
+PeriodId int,
+ExamMainId int,
+ExamDetailId numeric(18,0),
+QuestionId numeric(18,0),
+SubjectId numeric(18,0),
+SemNo int,
+QuestionNo varchar(50),
+QuestionDet varchar(8000),
+CoId  numeric(18,0),
+BloomId int,
+Marks  numeric(18,2),
+BloomName varchar(50),
+CoName varchar(50)
+)
+
+insert into #temp(
+PeriodId,
+ExamMainId,
+ExamDetailId,
+QuestionId,
+SubjectId,
+SemNo,
+QuestionNo,
+QuestionDet,
+CoId,
+BloomId,
+Marks
+)
+select 
+poco_exam_question_master_nPeriodId,
+poco_exam_question_master_nExamMainId,
+poco_exam_question_master_nExamDetailId,
+poco_exam_question_master_nQuestionId,
+poco_exam_question_master_nSubjectId,
+poco_exam_question_master_nSemNo,
+poco_exam_question_master_sQuestionNo,
+poco_exam_question_master_sQuestionDet,
+poco_exam_question_master_nCoId,
+poco_exam_question_master_nBloomId,
+poco_exam_question_master_nMarks
+from poco_exam_question_master
+where poco_exam_question_master_nPeriodId=@p_period_id
+and poco_exam_question_master_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nExamDetailId=@p_exam_detail_id
+and poco_exam_question_master_nSubjectId=@p_subject_id
+and poco_exam_question_master_nSemNo=@p_sem_no
+and poco_exam_question_master_nBranchId=@p_branch_id
+and poco_exam_question_master_nCourseId=@p_course_id
+
+update #temp set BloomName=poco_bloom_taxanomy_master_sDesp from poco_bloom_taxanomy_master 
+where BloomId=poco_bloom_taxanomy_master_nId
+
+
+update #temp set CoName=poco_subject_wise_co_master_sCoNo from poco_subject_wise_co_master 
+where CoId=poco_subject_wise_co_master_nRowId
+and poco_subject_wise_co_master_nPeriodId=@p_period_id
+and poco_subject_wise_co_master_nSubjectId=@p_subject_id
+
+
+select * from #temp order by QuestionId
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Question_Vs_Co_Matrix] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int
+)
+AS
+BEGIN
+
+
+declare @sql as varchar(8000)
+declare @m_concat_field varchar(100)
+declare @m_field_name varchar(100)
+declare @m_co_id numeric(18,0)
+declare @m_q_no varchar(50)
+
+
+create table #temp
+(
+CoId  numeric(18,0),
+CoName varchar(50)
+)
+
+/**Creating table field**/
+declare m_cursor CURSOR LOCAL for select poso_exam_detail_sDesp+'(' + poso_exam_detail_sSlNo+ ')('+ltrim(rtrim(str(poso_exam_detail_nFullMarks)))+')'
+from poso_exam_detail
+where poso_exam_detail_nId=@p_exam_main_id
+order by poso_exam_detail_sRowId
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @sql='alter table #temp add ' + @m_field_name +' varchar(1000) default '''' '
+	exec(@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+insert into #temp(CoId,CoName) select poco_subject_wise_co_master_nRowId,poco_subject_wise_co_master_sCoNo
+from poco_subject_wise_co_master where poco_subject_wise_co_master_nSubjectId=@p_subject_id
+and poco_subject_wise_co_master_nPeriodId=@p_period_id
+
+
+
+/**Updating Data**/
+declare m_cursor CURSOR LOCAL for select poso_exam_detail_sDesp+'(' + poso_exam_detail_sSlNo+ ')('+ltrim(rtrim(str(poso_exam_detail_nFullMarks)))+')',
+poco_exam_question_master_nCoId,poco_exam_question_master_sQuestionNo
+from poco_exam_question_master_view
+where poco_exam_question_master_nBranchId=@p_branch_id
+and poco_exam_question_master_nCourseId=@p_course_id
+and poco_exam_question_master_nPeriodId=@p_period_id
+and poco_exam_question_master_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nSubjectId=@p_subject_id
+and poco_exam_question_master_nSemNo=@p_sem_no
+order by poco_exam_question_master_nCoId
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field,@m_co_id,@m_q_no
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @m_q_no=@m_q_no +'  '
+
+	set @sql='update #temp set ' + @m_field_name +'='+@m_field_name+'+'''+@m_q_no+''' '
+	set @sql=@sql + ' where coid=' + LTRIM(str(@m_co_id))
+	exec (@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field,@m_co_id,@m_q_no
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+
+
+select * from #temp order by CoId
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Student_List_For_Marks_Entry] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_test_id numeric(18,0)
+)
+AS
+BEGIN
+
+--Proc_Get_Poco_Student_List_For_Marks_Entry 100,2,4,1,2936,6,1,5
+
+
+declare @sql as varchar(8000)
+declare @m_concat_field varchar(100)
+declare @m_field_name varchar(100)
+declare @m_co_id numeric(18,0)
+declare @m_q_no varchar(50)
+declare @m_q_id numeric(18,0)
+
+
+create table #temp
+(
+std_id  numeric(18,0),
+Present int default 1,
+Code varchar(25),
+Roll varchar(25),
+[Student Name] varchar(100),
+Total numeric(18,2) default 0
+)
+
+
+create table #temp1
+(
+std_id1  numeric(18,0),
+q_id numeric(18,0),
+marks numeric(18,2) default 0,
+grade varchar(10),
+flag varchar(10),
+str_marks varchar(10) default ''
+)
+
+/**Creating table field**/
+declare m_cursor CURSOR LOCAL for select poco_exam_question_master_sQuestionNo + ' (' + ltrim(str(poco_exam_question_master_nMarks))+')'
+from poco_exam_question_master
+where poco_exam_question_master_nBranchId=@p_branch_id
+and poco_exam_question_master_nPeriodId=@p_period_id
+and poco_exam_question_master_nCourseId=@p_course_id
+and poco_exam_question_master_nSubjectId=@p_subject_id
+and poco_exam_question_master_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nExamDetailId=@p_exam_test_id
+and poco_exam_question_master_nIsActive=1
+order by poco_exam_question_master_nQuestionId
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @sql='alter table #temp add ' + @m_field_name +' varchar(10) default '''' '
+	exec(@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+
+
+
+insert into #temp(
+std_id,Code,Roll,[Student Name]
+)
+select STD_STUDENT_MASTER_nStudentId,STD_STUDENT_MASTER_sStudentRoll,
+STD_STUDENT_MASTER_sUniversity_Roll_No,STD_STUDENT_MASTER_sStudentName 
+from std_student_master_view
+where STD_COLLEGE_nBranchId=@p_branch_id
+and STD_STUDENT_BATCH_nCourseId=@p_course_id
+and STD_STUDENT_BATCH_nStreamMainId=@p_stream_id
+and STD_SEMESTER_nSemNo=@p_sem_no
+and STD_STUDENT_MASTER_cIsLeft='N'
+
+/***updating total***/
+update #temp set Total=poco_student_marks_main_nFullMarks,
+Present=poco_student_marks_main_nIsActive 
+from poco_student_marks_main
+where poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_student_marks_main_nExamDetailId=@p_exam_test_id
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+and poco_student_marks_main_nStudentId=std_id
+
+
+
+insert into #temp1(std_id1,q_id,marks,grade,flag)
+select 
+poco_student_marks_detail_nStudentId,
+poco_student_marks_detail_nQuestionId,
+poco_student_marks_detail_nMarks,
+poco_student_marks_detail_sGrade,
+poco_student_marks_detail_sFlag
+from poco_student_marks_detail
+where poco_student_marks_detail_nBranchId=@p_branch_id
+and poco_student_marks_detail_nPeriodId=@p_period_id
+and poco_student_marks_detail_nCourseId=@p_course_id
+and poco_student_marks_detail_nStreamId=@p_stream_id
+and poco_student_marks_detail_nExamMainId=@p_exam_main_id
+and poco_student_marks_detail_nExamDetailId=@p_exam_test_id
+and poco_student_marks_detail_nSubjectId=@p_subject_id
+and poco_student_marks_detail_nSemNo=@p_sem_no
+
+update #temp1 set str_marks=LTRIM(rtrim(str(marks))) where marks>=0
+update #temp1 set str_marks=grade where marks=-1 and grade in('A','B','C','D','E','F','O','I') AND flag='ATTEND'
+
+
+
+
+/**updating marks**/
+declare m_cursor CURSOR LOCAL for select poco_exam_question_master_sQuestionNo + ' (' + ltrim(str(poco_exam_question_master_nMarks))+')',
+poco_exam_question_master_nQuestionId
+from poco_exam_question_master
+where poco_exam_question_master_nBranchId=@p_branch_id
+and poco_exam_question_master_nPeriodId=@p_period_id
+and poco_exam_question_master_nCourseId=@p_course_id
+and poco_exam_question_master_nSubjectId=@p_subject_id
+and poco_exam_question_master_nExamMainId=@p_exam_main_id
+and poco_exam_question_master_nExamDetailId=@p_exam_test_id
+and poco_exam_question_master_nIsActive=1
+order by poco_exam_question_master_nQuestionId
+
+OPEN m_cursor 
+FETCH NEXT FROM m_cursor 
+INTO @m_concat_field,@m_q_id
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	
+	set @m_field_name = '['+@m_concat_field+']'
+	set @sql='update #temp set ' + @m_field_name +'=str_marks from #temp1 where std_id=std_id1 and q_id='+LTRIM(rtrim(str(@m_q_id)))
+	
+	exec(@sql)
+
+	FETCH NEXT FROM m_cursor 
+	INTO @m_concat_field,@m_q_id
+END
+CLOSE m_cursor 
+DEALLOCATE m_cursor 
+
+select * from #temp order by roll
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+create PROCEDURE [dbo].[Proc_Get_Poco_Subject_Wise_Co] 
+(
+@p_period_id int,
+@p_subject_id int
+)
+AS
+BEGIN
+
+
+
+
+select * from poco_subject_wise_co_master
+where poco_subject_wise_co_master_nPeriodId=@p_period_id
+and poco_subject_wise_co_master_nSubjectId=@p_subject_id
+order by poco_subject_wise_co_master_sCoNo
+
+
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Question_Master]     
+(    
+@p_branch_id int,
+@p_PeriodId int,
+@p_CourseId Int,
+@p_ExamMainId numeric(18,0),
+@p_ExamDetailId  numeric(18,0),
+@p_QuestionId  numeric(18,0),
+@p_SubjectId  numeric(18,0),
+@p_SemNo int,
+@p_QuestionNo varchar(50),
+@p_QuestionDet varchar(8000),
+@p_CoId  numeric(18,0),
+@p_BloomId int,
+@p_Marks numeric(18,2)
+
+    
+)    
+AS    
+BEGIN    
+    
+declare @m_err_no int    
+declare @m_err_mesg varchar(100)    
+set @m_err_no=0    
+    
+    
+    
+    
+begin try    
+ begin transaction     
+    
+    
+  if @p_QuestionId=0
+  begin
+		insert into poco_exam_question_master
+		(
+		poco_exam_question_master_nBranchId,
+		poco_exam_question_master_nPeriodId,
+		poco_exam_question_master_nCourseId,
+		poco_exam_question_master_nExamMainId,
+		poco_exam_question_master_nExamDetailId,
+		poco_exam_question_master_nSubjectId,
+		poco_exam_question_master_nSemNo,
+		poco_exam_question_master_sQuestionNo,
+		poco_exam_question_master_sQuestionDet,
+		poco_exam_question_master_nCoId,
+		poco_exam_question_master_nBloomId,
+		poco_exam_question_master_nMarks,
+		poco_exam_question_master_nIsActive
+		)
+		select 
+		@p_branch_id,
+		@p_PeriodId,
+		@p_CourseId,
+		@p_ExamMainId ,
+		@p_ExamDetailId  ,
+		@p_SubjectId  ,
+		@p_SemNo ,
+		@p_QuestionNo ,
+		@p_QuestionDet ,
+		@p_CoId  ,
+		@p_BloomId ,
+		@p_Marks,
+		1
+  end
+  else
+  begin
+	update poco_exam_question_master
+	set
+	poco_exam_question_master_sQuestionNo=@p_QuestionNo,
+	poco_exam_question_master_sQuestionDet=@p_QuestionDet,
+	poco_exam_question_master_nCoId=@p_CoId,
+	poco_exam_question_master_nBloomId=@p_BloomId,
+	poco_exam_question_master_nMarks=@p_Marks
+	where poco_exam_question_master_nQuestionId=@p_QuestionId	
+	and poco_exam_question_master_nBranchId=@p_branch_id  
+	  
+  end
+
+
+
+
+ commit transaction    
+ set @m_err_mesg='Success'    
+end try    
+    
+    
+begin catch    
+ set @m_err_no=1    
+ set @m_err_mesg='Error In Saving'     
+ rollback transaction     
+end catch    
+    
+    
+select @m_err_mesg as err_mesg,@m_err_no as err_no    
+END    
+    
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Student_Wise_Marks] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_test_id numeric(18,0),
+@p_main_xml xml,
+@p_det_xml xml
+)
+AS
+BEGIN
+
+declare @m_err_no int
+declare @m_err_mesg varchar(100)
+declare @m_gen_err int
+declare @m_grn_id numeric(18,0)
+
+declare @m_doc_no varchar(50)
+declare @m_document_flag varchar(1)
+
+set @m_err_no=0
+
+begin try
+	begin transaction 
+
+
+		/*adding data in ugrm Main*/
+		set @m_err_mesg='Error in saving grn Main'
+		exec Proc_Save_Poco_Student_Wise_Marks_Main @p_main_xml,
+													@p_branch_id,
+													@p_course_id ,
+													@p_stream_id ,
+													@p_period_id ,
+													@p_subject_id ,
+													@p_sem_no ,
+													@p_exam_main_id ,
+													@p_exam_test_id 	
+        /*********************/
+
+
+		/*adding data in ugrm Detail*/
+		set @m_err_mesg='Error in saving Mi Detail'
+		exec Proc_Save_Poco_Student_Wise_Marks_Detail @p_det_xml,
+													@p_branch_id,
+													@p_course_id ,
+													@p_stream_id ,
+													@p_period_id ,
+													@p_subject_id ,
+													@p_sem_no ,
+													@p_exam_main_id ,
+													@p_exam_test_id 			
+        /***********************/
+		
+	commit transaction
+	set @m_err_mesg='Success'
+end try
+
+
+begin catch
+	set @m_err_no=1
+	rollback transaction 
+end catch
+
+
+select @m_err_mesg as err_mesg,@m_err_no as err_no
+END
+
+
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Student_Wise_Marks_Detail]   
+(  
+@p_rec xml,  
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_test_id numeric(18,0)
+)  
+AS  
+BEGIN  
+  
+create table #marks_det
+(  
+std_id numeric(18,0),
+q_id numeric(18,0),
+marks numeric(18,2),
+grade varchar(10),
+flag varchar(10)
+)  
+  
+declare @m_count int  
+declare @m_gen_err int  
+/**********Reading XML************/  
+DECLARE @intHandler INT   
+  
+EXEC sp_xml_preparedocument @intHandler OUTPUT, @p_rec  
+  
+insert into #marks_det(std_id,q_id,marks,grade,flag)  
+select                 std_id,q_id,marks,grade,flag
+from  
+OPENXML(@intHandler,'MARKS_DET/RECORD',2)   
+WITH (  
+std_id numeric(18,0) 'std_id',  
+q_id numeric(18,0) 'q_id',  
+marks numeric(18,2) 'marks',  
+grade varchar(10) 'grade',
+flag varchar(10) 'flag'
+)  
+  
+  
+-- Remove the internal representation.  
+exec sp_xml_removedocument @intHandler  
+  
+select @m_count=count(*) from #marks_det   
+  
+if @m_count<=0  
+begin  
+ set @m_gen_err=1/0   
+end  
+  
+delete from poco_student_marks_detail where   
+poco_student_marks_detail_nBranchId=@p_branch_id
+and poco_student_marks_detail_nPeriodId=@p_period_id
+and poco_student_marks_detail_nCourseId=@p_course_id
+and poco_student_marks_detail_nStreamId=@p_stream_id
+and poco_student_marks_detail_nExamMainId=@p_exam_main_id
+and poco_student_marks_detail_nExamDetailId=@p_exam_test_id
+and poco_student_marks_detail_nSubjectId=@p_subject_id
+and poco_student_marks_detail_nSemNo=@p_sem_no
+
+
+  
+  
+/***************************************/  
+insert into poco_student_marks_detail(  
+poco_student_marks_detail_nBranchId,
+poco_student_marks_detail_nPeriodId,
+poco_student_marks_detail_nCourseId,
+poco_student_marks_detail_nStreamId,
+poco_student_marks_detail_nExamMainId,
+poco_student_marks_detail_nExamDetailId,
+poco_student_marks_detail_nQuestionId,
+poco_student_marks_detail_nSubjectId,
+poco_student_marks_detail_nSemNo,
+poco_student_marks_detail_nStudentId,
+poco_student_marks_detail_nMarks,
+poco_student_marks_detail_sGrade,
+poco_student_marks_detail_sFlag
+)  
+select  
+@p_branch_id,
+@p_period_id,
+@p_course_id,
+@p_stream_id,
+@p_exam_main_id,
+@p_exam_test_id,
+q_id,
+@p_subject_id,
+@p_sem_no,
+std_id,
+marks,
+grade,
+flag 
+from #marks_det
+
+  
+select @m_count=count(*) from poco_student_marks_detail
+where   
+poco_student_marks_detail_nBranchId=@p_branch_id
+and poco_student_marks_detail_nPeriodId=@p_period_id
+and poco_student_marks_detail_nCourseId=@p_course_id
+and poco_student_marks_detail_nStreamId=@p_stream_id
+and poco_student_marks_detail_nExamMainId=@p_exam_main_id
+and poco_student_marks_detail_nExamDetailId=@p_exam_test_id
+and poco_student_marks_detail_nSubjectId=@p_subject_id
+and poco_student_marks_detail_nSemNo=@p_sem_no
+  
+if @m_count<=0  
+begin  
+ set @m_gen_err=1/0   
+end  
+  
+END  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Student_Wise_Marks_Main]   
+(  
+@p_rec xml,  
+@p_branch_id int,
+@p_course_id int,
+@p_stream_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_sem_no int,
+@p_exam_main_id int,
+@p_exam_test_id numeric(18,0)
+)  
+AS  
+BEGIN  
+  
+create table #marks_main
+(  
+std_id numeric(18,0) default 0,
+full_marks numeric(18,2) default 0,
+is_active int
+)  
+  
+declare @m_count int  
+declare @m_gen_err int  
+/**********Reading XML************/  
+DECLARE @intHandler INT   
+  
+EXEC sp_xml_preparedocument @intHandler OUTPUT, @p_rec  
+  
+insert into #marks_main(std_id,full_marks,is_active)  
+select                  std_id,full_marks,is_active
+from  
+OPENXML(@intHandler,'MARKS_MAIN/RECORD',2)   
+WITH (  
+std_id numeric(18,0) 'std_id',  
+full_marks numeric(18,2) 'full_marks',  
+is_active int 'is_active' 
+)  
+  
+  
+-- Remove the internal representation.  
+exec sp_xml_removedocument @intHandler  
+  
+select @m_count=count(*) from #marks_main   
+  
+if @m_count<=0  
+begin  
+ set @m_gen_err=1/0   
+end  
+  
+delete from poco_student_marks_main where   
+poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_student_marks_main_nExamDetailId=@p_exam_test_id
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+
+
+  
+  
+/***************************************/  
+insert into poco_student_marks_main(  
+poco_student_marks_main_nBranchId,
+poco_student_marks_main_nPeriodId,
+poco_student_marks_main_nCourseId,
+poco_student_marks_main_nStreamId,
+poco_student_marks_main_nExamMainId,
+poco_student_marks_main_nExamDetailId,
+poco_student_marks_main_nSubjectId,
+poco_student_marks_main_nSemNo,
+poco_student_marks_main_nStudentId,
+poco_student_marks_main_nFullMarks,
+poco_student_marks_main_nIsActive
+)  
+select  
+@p_branch_id,
+@p_period_id,
+@p_course_id,
+@p_stream_id,
+@p_exam_main_id,
+@p_exam_test_id,
+@p_subject_id,
+@p_sem_no,
+std_id,
+full_marks,
+is_active 
+from #marks_main  
+
+  
+select @m_count=count(*) from poco_student_marks_main
+where   
+poco_student_marks_main_nBranchId=@p_branch_id
+and poco_student_marks_main_nPeriodId=@p_period_id
+and poco_student_marks_main_nCourseId=@p_course_id
+and poco_student_marks_main_nStreamId=@p_stream_id
+and poco_student_marks_main_nExamMainId=@p_exam_main_id
+and poco_student_marks_main_nExamDetailId=@p_exam_test_id
+and poco_student_marks_main_nSubjectId=@p_subject_id
+and poco_student_marks_main_nSemNo=@p_sem_no
+  
+if @m_count<=0  
+begin  
+ set @m_gen_err=1/0   
+end  
+  
+END  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Subject_Wise_Copo_Mapping] 
+(
+@p_branch_id int,
+@p_course_id int,
+@p_period_id int,
+@p_subject_id numeric(18,0),
+@p_det_xml xml
+)
+AS
+BEGIN
+
+declare @m_err_no int
+declare @m_err_mesg varchar(100)
+declare @m_gen_err int
+declare @m_grn_id numeric(18,0)
+
+declare @m_doc_no varchar(50)
+declare @m_document_flag varchar(1)
+
+set @m_err_no=0
+
+begin try
+	begin transaction 
+
+
+
+
+		/*adding data in ugrm Detail*/
+		set @m_err_mesg='Error in saving Copo Mapping Detail'
+		exec Proc_Save_Poco_Subject_Wise_Copo_Mapping_Detail @p_det_xml,
+													@p_branch_id,
+													@p_course_id ,
+													@p_period_id ,
+													@p_subject_id  			
+        /***********************/
+		
+	commit transaction
+	set @m_err_mesg='Success'
+end try
+
+
+begin catch
+	set @m_err_no=1
+	rollback transaction 
+end catch
+
+
+select @m_err_mesg as err_mesg,@m_err_no as err_no
+END
+
+
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Subject_Wise_Copo_Mapping_Detail]     
+(    
+@p_rec xml,    
+@p_branch_id int,  
+@p_course_id int,  
+@p_period_id int,  
+@p_subject_id numeric(18,0)
+)    
+AS    
+BEGIN    
+    
+create table #copo_det  
+(    
+CoId  numeric(18,0),
+PoId numeric(18,0),
+Scale numeric(18,2)
+)    
+    
+declare @m_count int    
+declare @m_gen_err int    
+/**********Reading XML************/    
+DECLARE @intHandler INT     
+    
+EXEC sp_xml_preparedocument @intHandler OUTPUT, @p_rec    
+    
+insert into #copo_det(CoId,PoId,Scale)    
+select                CoId,PoId,Scale
+from    
+OPENXML(@intHandler,'COPO_DET/RECORD',2)     
+WITH (    
+CoId  numeric(18,0) 'CoId',
+PoId numeric(18,0) 'PoId',
+Scale numeric(18,2) 'Scale'
+)    
+    
+    
+-- Remove the internal representation.    
+exec sp_xml_removedocument @intHandler    
+    
+select @m_count=count(*) from #copo_det     
+    
+if @m_count<=0    
+begin    
+ set @m_gen_err=1/0     
+end    
+    
+delete from poco_subject_wise_co_po_mapping where     
+poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id  
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id  
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+and poco_subject_wise_co_po_mapping_nSubjectId=@p_subject_id  
+  
+  
+    
+    
+/***************************************/    
+insert into poco_subject_wise_co_po_mapping(    
+poco_subject_wise_co_po_mapping_nCollegeId,
+poco_subject_wise_co_po_mapping_nPeriodId,
+poco_subject_wise_co_po_mapping_nCourseId,
+poco_subject_wise_co_po_mapping_nSubjectId,
+poco_subject_wise_co_po_mapping_nCoId,
+poco_subject_wise_co_po_mapping_nPoId,
+poco_subject_wise_co_po_mapping_nScale 
+)    
+select    
+@p_branch_id,  
+@p_period_id,  
+@p_course_id,    
+@p_subject_id,  
+CoId,
+PoId,
+Scale 
+from #copo_det  
+  
+    
+select @m_count=count(*) from poco_subject_wise_co_po_mapping where     
+poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id  
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id  
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+and poco_subject_wise_co_po_mapping_nSubjectId=@p_subject_id  
+
+    
+if @m_count<=0    
+begin    
+ set @m_gen_err=1/0     
+end    
+    
+END    
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Main_Detail]   
+(  
+@p_batch_id int,
+@p_subject_id numeric(18,0),
+@p_module varchar(20)='%'
+)  
+AS  
+BEGIN  
+
+
+create table #temp
+(
+ModuleDetail varchar(100),
+ModuleId numeric(18,0),
+SubModuleId  numeric(18,0),
+SubModuleSl numeric(18,0),
+Topic ngo,
+Details ngo,
+Lecture int
+)
+
+
+insert into #temp
+(
+ModuleId,SubModuleId,SubModuleSl,Topic,Details,Lecture
+)
+select 
+poco_subject_master_module_detail_for_batch_nModuleId,
+poco_subject_master_module_detail_for_batch_nSubModuleId,
+poco_subject_master_module_detail_for_batch_nSubModuleSl,
+poco_subject_master_module_detail_for_batch_sTopic,
+poco_subject_master_module_detail_for_batch_sDetails,
+poco_subject_master_module_detail_for_batch_nClassCount
+from poco_subject_master_module_detail_for_batch
+where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id
+and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id
+and poco_subject_master_module_detail_for_batch_nIsActive=1
+
+update #temp set ModuleDetail=poco_module_sName from poco_module where ModuleId=poco_module_nId
+update #temp set ModuleDetail=ModuleDetail+'.'+ltrim(str(SubModuleSl))
+
+
+select * from #temp where Lecture>0 and ModuleDetail like @p_module
+order by ModuleId,SubModuleSl
+
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[Proc_Save_Lesson_plan_New]   
+(  
+
+@p_Date datetime,
+@p_Batch int,
+@p_CourseId int,
+@p_StreamId int,
+@p_SectionId int,
+@p_SemesterId int,
+@p_PeriodId int,
+@p_SubjectId numeric(18,0),
+@p_GroupId int,
+@p_FacultyCode varchar(100),
+@p_CollegeId int,
+@p_Topic varchar(8000),
+@p_SubModuleId numeric(18,0),
+@p_Lecture int
+)  
+AS  
+BEGIN  
+  
+declare @m_err_no int  
+declare @m_err_mesg varchar(100)  
+declare @m_gen_err int  
+declare @m_key_id numeric(18,0)  
+declare @m_ctr int  
+declare @m_emph_name varchar(100)
+declare @m_DayId int
+
+  
+set @m_err_no=0  
+
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)
+  
+begin try  
+ begin transaction   
+  
+	select @m_key_id=TIME_TABLE_DATEWISE_FACULTY_nKeyId,@m_emph_name=TIME_TABLE_DATEWISE_FACULTY_nFacultyName from TIME_TABLE_DATEWISE_FACULTY 
+	where TIME_TABLE_DATEWISE_FACULTY_dDate=@p_Date
+	and TIME_TABLE_DATEWISE_FACULTY_nBatch=@p_Batch
+	and TIME_TABLE_DATEWISE_FACULTY_nCourseId=@p_CourseId
+	and TIME_TABLE_DATEWISE_FACULTY_nStreamId=@p_StreamId
+	and TIME_TABLE_DATEWISE_FACULTY_nSectionId=@p_SectionId
+	and TIME_TABLE_DATEWISE_FACULTY_nSemesterId=@p_SemesterId
+	and TIME_TABLE_DATEWISE_FACULTY_nDayId=@m_DayId
+	and TIME_TABLE_DATEWISE_FACULTY_nPeriodId=@p_PeriodId
+	and TIME_TABLE_DATEWISE_FACULTY_nSubjectId=@p_SubjectId
+	and TIME_TABLE_DATEWISE_FACULTY_nGroupId=@p_GroupId
+	and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode=@p_FacultyCode
+	and TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@p_CollegeId
+	and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1
+	and TIME_TABLE_DATEWISE_FACULTY_sActiveFlag='A' 
+	
+
+
+	select @m_ctr=count(*) from TIME_TABLE_DATEWISE_FACULTY_LP    
+	where TIME_TABLE_DATEWISE_FACULTY_LP_dDate=@p_Date
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nBatch=@p_Batch
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId=@p_CourseId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nStreamId=@p_StreamId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nSectionId=@p_SectionId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId=@p_SemesterId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nDayId=@m_DayId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nPeriodId=@p_PeriodId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nSubjectId=@p_SubjectId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nGroupId=@p_GroupId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyCode=@p_FacultyCode
+	and TIME_TABLE_DATEWISE_FACULTY_LPY_nKeyId=@m_key_id
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=@p_CollegeId
+	and TIME_TABLE_DATEWISE_FACULTY_LP_nIsActive=1
+	and TIME_TABLE_DATEWISE_FACULTY_LP_sActiveFlag='A'
+	
+    if @m_ctr=0  
+	begin  
+		insert into TIME_TABLE_DATEWISE_FACULTY_LP(  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyCode,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nDayId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_dDate,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nPeriodId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nSubjectId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nBatch,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nStreamId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nSectionId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nGroupId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nIsRecess,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyName,  
+		TIME_TABLE_DATEWISE_FACULTY_LPY_nKeyId,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_nIsActive,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_sActiveFlag,  
+		TIME_TABLE_DATEWISE_FACULTY_LP_sTopic,
+		TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId,
+		TIME_TABLE_DATEWISE_FACULTY_LP_nLecture)  
+		select   
+		@p_CollegeId,  
+		@p_FacultyCode,  
+		@m_DayId,  
+		@p_Date,  
+		@p_PeriodId,  
+		@p_SubjectId,  
+		@p_Batch,  
+		@p_CourseId,  
+		@p_StreamId,  
+		@p_SectionId,  
+		@p_SemesterId,  
+		@p_GroupId,  
+		0,  
+		@m_emph_name,  
+		@m_key_id,  
+		1,  
+		'A',  
+		@p_Topic,
+		@p_SubModuleId,
+		@p_Lecture
+		   
+	end  
+	else  
+	begin   
+		update TIME_TABLE_DATEWISE_FACULTY_LP  
+		set TIME_TABLE_DATEWISE_FACULTY_LP_sTopic=@p_Topic,
+		TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId=@p_SubModuleId,
+		TIME_TABLE_DATEWISE_FACULTY_LP_nLecture=@p_Lecture
+		where TIME_TABLE_DATEWISE_FACULTY_LP_dDate=@p_Date
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nBatch=@p_Batch
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId=@p_CourseId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nStreamId=@p_StreamId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nSectionId=@p_SectionId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId=@p_SemesterId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nDayId=@m_DayId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nPeriodId=@p_PeriodId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nSubjectId=@p_SubjectId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nGroupId=@p_GroupId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyCode=@p_FacultyCode
+		and TIME_TABLE_DATEWISE_FACULTY_LPY_nKeyId=@m_key_id
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=@p_CollegeId
+		and TIME_TABLE_DATEWISE_FACULTY_LP_nIsActive=1
+		and TIME_TABLE_DATEWISE_FACULTY_LP_sActiveFlag='A'
+ 
+	end  
+  	
+
+                
+    
+ commit transaction  
+ set @m_err_mesg='Success'  
+end try  
+  
+  
+begin catch  
+ set @m_err_no=1  
+ rollback transaction   
+end catch  
+  
+  
+select @m_err_mesg as err_mesg,@m_err_no as err_no  
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Save_Lesson_plan_Resource]   
+(  
+@p_UniqueKeyId numeric(18,0),
+@p_Date datetime,
+@p_Batch int,
+@p_CourseId int,
+@p_StreamId int,
+@p_SectionId int,
+@p_SemesterId int,
+@p_PeriodId int,
+@p_SubjectId numeric(18,0),
+@p_GroupId int,
+@p_FacultyCode varchar(100),
+@p_CollegeId int,
+@p_ResourceTypeId int,
+@p_Desp varchar(200),
+@p_Link varchar(200)
+)  
+AS  
+BEGIN  
+  
+declare @m_err_no int  
+declare @m_err_mesg varchar(100)  
+declare @m_gen_err int  
+declare @m_key_id numeric(18,0)  
+declare @m_ctr int  
+declare @m_emph_name varchar(100)
+declare @m_DayId int
+
+  
+set @m_err_no=0  
+
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)
+  
+begin try  
+ begin transaction   
+  
+	select @m_key_id=TIME_TABLE_DATEWISE_FACULTY_nKeyId,@m_emph_name=TIME_TABLE_DATEWISE_FACULTY_nFacultyName from TIME_TABLE_DATEWISE_FACULTY 
+	where TIME_TABLE_DATEWISE_FACULTY_dDate=@p_Date
+	and TIME_TABLE_DATEWISE_FACULTY_nBatch=@p_Batch
+	and TIME_TABLE_DATEWISE_FACULTY_nCourseId=@p_CourseId
+	and TIME_TABLE_DATEWISE_FACULTY_nStreamId=@p_StreamId
+	and TIME_TABLE_DATEWISE_FACULTY_nSectionId=@p_SectionId
+	and TIME_TABLE_DATEWISE_FACULTY_nSemesterId=@p_SemesterId
+	and TIME_TABLE_DATEWISE_FACULTY_nDayId=@m_DayId
+	and TIME_TABLE_DATEWISE_FACULTY_nPeriodId=@p_PeriodId
+	and TIME_TABLE_DATEWISE_FACULTY_nSubjectId=@p_SubjectId
+	and TIME_TABLE_DATEWISE_FACULTY_nGroupId=@p_GroupId
+	and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode=@p_FacultyCode
+	and TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@p_CollegeId
+	and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1
+	and TIME_TABLE_DATEWISE_FACULTY_sActiveFlag='A' 
+	
+
+
+
+	
+    if @p_UniqueKeyId=0  and @m_key_id>0
+	begin  
+		insert into TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD(  
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nFacultyCode,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOADY_nKeyId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink
+		)  
+		select   
+		@p_Date,
+		@p_Batch,
+		@p_CourseId,
+		@p_StreamId,
+		@p_SectionId,
+		@p_SemesterId,
+		@m_DayId,
+		@p_PeriodId,
+		@p_SubjectId,
+		@p_GroupId,
+		@p_FacultyCode,
+		@m_key_id,
+		@p_CollegeId,
+		1,
+		@p_ResourceTypeId,
+		@p_Desp,
+		@p_Link	   
+	end  
+	else  if @p_UniqueKeyId>0  and @m_key_id>0
+	begin   
+		update TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD  
+		set TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId=@p_ResourceTypeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp=@p_Desp,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink=@p_Link
+		where TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId=@p_UniqueKeyId 
+	end  
+  	
+
+                
+    
+ commit transaction  
+ set @m_err_mesg='Success'  
+end try  
+  
+  
+begin catch  
+ set @m_err_no=1  
+ rollback transaction   
+end catch  
+  
+  
+select @m_err_mesg as err_mesg,@m_err_no as err_no  
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Resource_Type] 
+(
+	@p_name varchar(100)='%'
+)
+AS
+BEGIN
+
+
+
+
+select 
+poco_upload_resource_type_nId as resource_type_id ,
+poco_upload_resource_type_sName as resource_type_name,
+poco_upload_resource_type_nIsUpload as is_upload
+from poco_upload_resource_type 
+order by poco_upload_resource_type_sName
+
+END
+
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Save_Lesson_plan_Resource]   
+(  
+@p_UniqueKeyId numeric(18,0),
+@p_Date datetime,
+@p_Batch int,
+@p_CourseId int,
+@p_StreamId int,
+@p_SectionId int,
+@p_SemesterId int,
+@p_PeriodId int,
+@p_SubjectId numeric(18,0),
+@p_GroupId int,
+@p_FacultyCode varchar(100),
+@p_CollegeId int,
+@p_ResourceTypeId int,
+@p_Desp varchar(200),
+@p_Link varchar(200)
+)  
+AS  
+BEGIN  
+  
+declare @m_err_no int  
+declare @m_err_mesg varchar(100)  
+declare @m_gen_err int  
+declare @m_key_id numeric(18,0)  
+declare @m_ctr int  
+declare @m_emph_name varchar(100)
+declare @m_DayId int
+
+  
+set @m_err_no=0  
+
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)
+  
+begin try  
+ begin transaction   
+  
+	select @m_key_id=TIME_TABLE_DATEWISE_FACULTY_nKeyId,@m_emph_name=TIME_TABLE_DATEWISE_FACULTY_nFacultyName from TIME_TABLE_DATEWISE_FACULTY 
+	where TIME_TABLE_DATEWISE_FACULTY_dDate=@p_Date
+	and TIME_TABLE_DATEWISE_FACULTY_nBatch=@p_Batch
+	and TIME_TABLE_DATEWISE_FACULTY_nCourseId=@p_CourseId
+	and TIME_TABLE_DATEWISE_FACULTY_nStreamId=@p_StreamId
+	and TIME_TABLE_DATEWISE_FACULTY_nSectionId=@p_SectionId
+	and TIME_TABLE_DATEWISE_FACULTY_nSemesterId=@p_SemesterId
+	and TIME_TABLE_DATEWISE_FACULTY_nDayId=@m_DayId
+	and TIME_TABLE_DATEWISE_FACULTY_nPeriodId=@p_PeriodId
+	and TIME_TABLE_DATEWISE_FACULTY_nSubjectId=@p_SubjectId
+	and TIME_TABLE_DATEWISE_FACULTY_nGroupId=@p_GroupId
+	and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode=@p_FacultyCode
+	and TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@p_CollegeId
+	and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1
+	and TIME_TABLE_DATEWISE_FACULTY_sActiveFlag='A' 
+	
+
+
+
+	
+    if @p_UniqueKeyId=0  and @m_key_id>0
+	begin  
+		insert into TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD(  
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nFacultyCode,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOADY_nKeyId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink
+		)  
+		select   
+		@p_Date,
+		@p_Batch,
+		@p_CourseId,
+		@p_StreamId,
+		@p_SectionId,
+		@p_SemesterId,
+		@m_DayId,
+		@p_PeriodId,
+		@p_SubjectId,
+		@p_GroupId,
+		@p_FacultyCode,
+		@m_key_id,
+		@p_CollegeId,
+		1,
+		@p_ResourceTypeId,
+		@p_Desp,
+		@p_Link	   
+	end  
+	else  if @p_UniqueKeyId>0  and @m_key_id>0
+	begin   
+		update TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD  
+		set TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId=@p_ResourceTypeId,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp=@p_Desp,
+		TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink=@p_Link
+		where TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId=@p_UniqueKeyId 
+	end  
+  	
+
+                
+    
+ commit transaction  
+ set @m_err_mesg='Success'  
+end try  
+  
+  
+begin catch  
+ set @m_err_no=1  
+ rollback transaction   
+end catch  
+  
+  
+select @m_err_mesg as err_mesg,@m_err_no as err_no  
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+  
+CREATE PROCEDURE [dbo].[Proc_Delete_Lesson_plan_Resource]     
+(    
+@p_UniqueKeyId numeric(18,0),  
+@p_CollegeId int  
+)    
+AS    
+BEGIN    
+    
+declare @m_err_no int    
+declare @m_err_mesg varchar(100)    
+  
+    
+set @m_err_no=0    
+  
+    
+begin try    
+ begin transaction     
+    
+  
+ update TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD    
+ set TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive=0  
+ where TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId=@p_UniqueKeyId         
+ and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId=@p_CollegeId            
+      
+ commit transaction    
+ set @m_err_mesg='Success'    
+end try    
+    
+    
+begin catch    
+ set @m_err_no=1    
+ rollback transaction     
+end catch    
+    
+    
+select @m_err_mesg as err_mesg,@m_err_no as err_no    
+END    
+    
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROC [dbo].[Proc_Get_Student_Date_Wise_Routine_Calender]  
+(  
+ @P_COLLEGE_ID int,  
+ @P_STUDENT_CODE VARCHAR(50),  
+ @P_FROM_DATE DATETIME,  
+ @P_TO_DATE DATETIME
+)  
+AS  
+BEGIN  
+  
+--exec Proc_Get_Student_Date_Wise_Routine_Calender 7,'DSC/2021/0099','2022/09/01','2022/09/15'
+
+  
+CREATE TABLE #TEMP  
+(  
+ DAY_ID INT,  
+ DAY_NAME VARCHAR(20),  
+ DAY_DATE DATETIME,  
+ DETAIL_CONCAT1 VARCHAR(max) default '',
+ DETAIL_CONCAT2 VARCHAR(max) default '',
+ DETAIL_CONCAT3 VARCHAR(max) default '',
+ DETAIL_CONCAT4 VARCHAR(max) default '',
+ DETAIL_CONCAT5 VARCHAR(max) default '',
+ DETAIL_CONCAT6 VARCHAR(max) default '',
+ DETAIL_CONCAT7 VARCHAR(max) default '',
+ DETAIL_CONCAT8 VARCHAR(max) default '',
+ DETAIL_CONCAT9 VARCHAR(max) default '',
+ DETAIL_CONCAT10 VARCHAR(max)  default ''  
+)  
+
+
+  
+   
+  
+declare @m_student_id numeric(18,0)
+declare @m_routine_year int
+declare @m_routine_sem_id int
+declare @m_course_id int
+declare @m_stream_id int
+declare @m_sec_id int
+declare @m_sem_no int
+declare @m_current_date datetime
+declare @m_period int
+declare @sql varchar(max)
+
+
+select @m_student_id=STD_STUDENT_MASTER_nStudentId,
+@m_routine_year=STD_STUDENT_MASTER_sRoutineBatchYr,
+@m_routine_sem_id=STD_STUDENT_MASTER_sRoutineSemId,
+@m_course_id=STD_STUDENT_BATCH_nCourseId,
+@m_stream_id=STD_STUDENT_BATCH_nStreamMainId
+from STD_STUDENT_MASTER_VIEW where STD_STUDENT_MASTER_sStudentRoll=@P_STUDENT_CODE
+
+
+select @m_sem_no=STD_SEMESTER_nSemNo from STD_SEMESTER where STD_SEMESTER_nSemesterId=@m_routine_sem_id
+
+select @m_sec_id=Semester_Student_Relation_nSection from Semester_Student_Relation
+where Semester_Student_Relation_nStudentId=@m_student_id
+and Semester_Student_Relation_nSemesterId=@m_routine_sem_id
+and Semester_Student_Relation_nBatch=@m_routine_year
+and Semester_Student_Relation_nCourseId=@m_course_id
+and Semester_Student_Relation_nStreamID=@m_stream_id
+
+
+set @m_current_date=@P_FROM_DATE  
+while @m_current_date<=@P_TO_DATE  
+begin  
+  
+  insert into #temp(DAY_DATE,day_id,day_name)  
+  select @m_current_date,DATEPART(dw,@m_current_date),DATENAME(DW,@m_current_date)  
+    
+  set @m_current_date=@m_current_date+1  
+end 
+
+set @m_period=1
+while @m_period<=10
+begin
+ 	
+	set @sql='update #TEMP set DETAIL_CONCAT' + LTRIM(str(@m_period))+ '=STD_SUBJECT_sSUBJECT_CODE+''<br>''+emph_ShortName +'
+	set @sql=@sql + ' ''<>'' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nPeriodId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nSubjectId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nCourseId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nStreamId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nSectionId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nSemesterId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nGroupId)))+''_'' ' 
+	set @sql=@sql + ' + ltrim(rtrim(STR(TIME_TABLE_DATEWISE_FACULTY_nBatch)))+''_'' ' 
+	set @sql=@sql + ' + convert(varchar(10) ,TIME_TABLE_DATEWISE_FACULTY_dDate,103) ' 
+	set @sql=@sql + ' from TIME_TABLE_DATEWISE_FACULTY_view'
+	set @sql=@sql + ' where TIME_TABLE_DATEWISE_FACULTY_nCollegeId=' + LTRIM(str(@P_COLLEGE_ID))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_dDate=DAY_DATE' 
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nCourseId=' + LTRIM(str(@m_course_id))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nStreamId=' + LTRIM(str(@m_stream_id))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nSemesterId=' + LTRIM(str(@m_routine_sem_id))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nSectionId=' + LTRIM(str(@m_sec_id))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nPeriodId=' + LTRIM(str(@m_period))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nBatch=' + LTRIM(str(@m_routine_year))
+	set @sql=@sql + ' and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1'
+	
+	exec(@sql)
+	
+	set @m_period=@m_period + 1
+end
+
+  
+
+
+select 
+DAY_NAME,
+convert(varchar(10),DAY_DATE,103) as DAY_DATE,   
+DETAIL_CONCAT1 ,        
+DETAIL_CONCAT2,         
+DETAIL_CONCAT3,         
+DETAIL_CONCAT4,         
+DETAIL_CONCAT5,         
+DETAIL_CONCAT6,         
+DETAIL_CONCAT7,         
+DETAIL_CONCAT8,         
+DETAIL_CONCAT9,         
+DETAIL_CONCAT10
+
+from #temp
+order by DAY_DATE
+
+
+  
+  
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[Proc_Get_Subject_Wise_Lesson_plan_Resource]   
+(  
+@p_Date datetime,
+@p_Batch int,
+@p_CourseId int,
+@p_StreamId int,
+@p_SectionId int,
+@p_SemesterId int,
+@p_PeriodId int,
+@p_SubjectId numeric(18,0),
+@p_GroupId int,
+@p_CollegeId int
+)  
+AS  
+BEGIN  
+
+create table #temp
+(
+Edit varchar(10) default 'View',
+UniqueKeyId numeric(18,0),
+ResourceTypeId int,
+ResourceTypeName varchar(50),
+Desp varchar(200),
+Link varchar(200),
+is_upload int default 0
+)
+
+declare @m_DayId int
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)
+
+  
+insert into #temp(UniqueKeyId,ResourceTypeId,Desp,Link)
+select 
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId,
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId,
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp,
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink
+from TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD    
+where TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate=@p_Date
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch=@p_Batch
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId=@p_CourseId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId=@p_StreamId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId=@p_SectionId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId=@p_SemesterId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId=@m_DayId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId=@p_PeriodId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId=@p_SubjectId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId=@p_GroupId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId=@p_CollegeId
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive=1
+
+
+update #temp set ResourceTypeName=poco_upload_resource_type_sName,is_upload=poco_upload_resource_type_nIsUpload
+from poco_upload_resource_type where ResourceTypeId=poco_upload_resource_type_nId
+
+
+select * from #temp
+order by UniqueKeyId
+
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROC [dbo].[Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance]  
+(  
+ @P_COLLEGE_ID int,  
+ @P_STUDENT_CODE VARCHAR(50),  
+ @P_YEAR int,  
+ @P_MONTH int
+)  
+AS  
+BEGIN  
+  
+--exec Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance 7,'DSC/2021/0099','2022/06/01','2022/09/30'
+
+
+  
+CREATE TABLE #TEMP1  
+(  
+date1 datetime,
+batch1 int,
+CourseId1 int,
+StreamId1 int,
+SectionId1 int,
+SemesterId1 int,
+SubjectId1 numeric(18,0),
+GroupId1 int,
+ctr1 int default 0,
+is_app int default 0,
+present1  int default 0,
+absent1  int default 0
+)  
+
+CREATE TABLE #TEMP2  
+(  
+date2 datetime,
+batch2 int,
+CourseId2 int,
+StreamId2 int,
+SectionId2 int,
+SemesterId2 int,
+SubjectId2 numeric(28,0),
+GroupId2 int,
+ctr2 int default 0,
+present2  int default 0,
+absent2  int default 0
+)  
+
+CREATE TABLE #TEMP3
+(  
+date3 datetime,
+ctr3 int default 0,
+present3  int default 0
+)  
+
+create table #temp  
+(  
+week_id int,  
+day1 varchar(8000) default '',  
+day2 varchar(8000) default '',  
+day3 varchar(8000) default '',  
+day4 varchar(8000) default '',  
+day5 varchar(8000) default '',  
+day6 varchar(8000) default '',  
+day7 varchar(8000) default ''  
+) 
+  
+
+  
+   
+  
+declare @m_student_id numeric(18,0)
+declare @m_routine_year int
+declare @m_routine_sem_id int
+declare @m_course_id int
+declare @m_stream_id int
+declare @m_sec_id int
+declare @m_sem_no int
+declare @m_current_date datetime
+declare @m_period int
+declare @sql varchar(max)
+declare @m_str_date varchar(10)
+declare @P_FROM_DATE datetime
+declare @P_TO_DATE datetime
+
+declare @m_week int  
+declare @m_day_of_week int  
+declare @m_day int  
+declare @m_ctr int 
+
+declare @m_field varchar(25)  
+declare @m_value1 varchar(max) 
+declare @m_value2 varchar(max) 
+
+/****creating from & to date *****/  
+set @m_str_date=LTRIM(str(@p_year))+'/'+LTRIM(str(@p_month))+'/01'  
+set @P_FROM_DATE=CONVERT (date,@m_str_date,102)  
+  
+if (@p_month+1)>=13  
+begin  
+ set @m_str_date=LTRIM(str(@p_year+1))+ '/01/01'  
+end  
+else  
+begin  
+ set @m_str_date=LTRIM(str(@p_year))+'/'+LTRIM(str(@p_month+1))+'/01'  
+end  
+set @P_TO_DATE=CONVERT (date,@m_str_date,102)  
+set @P_TO_DATE=@P_TO_DATE-1  
+/**********************************/  
+
+ 
+
+
+select @m_student_id=STD_STUDENT_MASTER_nStudentId,
+@m_routine_year=STD_STUDENT_MASTER_sRoutineBatchYr,
+@m_routine_sem_id=STD_STUDENT_MASTER_sRoutineSemId,
+@m_course_id=STD_STUDENT_BATCH_nCourseId,
+@m_stream_id=STD_STUDENT_BATCH_nStreamMainId
+from STD_STUDENT_MASTER_VIEW where STD_STUDENT_MASTER_sStudentRoll=@P_STUDENT_CODE
+
+
+select @m_sem_no=STD_SEMESTER_nSemNo from STD_SEMESTER where STD_SEMESTER_nSemesterId=@m_routine_sem_id
+
+select @m_sec_id=Semester_Student_Relation_nSection from Semester_Student_Relation
+where Semester_Student_Relation_nStudentId=@m_student_id
+and Semester_Student_Relation_nSemesterId=@m_routine_sem_id
+and Semester_Student_Relation_nBatch=@m_routine_year
+and Semester_Student_Relation_nCourseId=@m_course_id
+and Semester_Student_Relation_nStreamID=@m_stream_id
+
+
+insert into #TEMP1(
+date1,batch1,CourseId1,StreamId1,SectionId1,SemesterId1,SubjectId1,GroupId1,ctr1
+)
+select 
+TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId,COUNT(*)
+from TIME_TABLE_DATEWISE
+where TIME_TABLE_DATEWISE_nCollegeId=@P_COLLEGE_ID
+and TIME_TABLE_DATEWISE_dDate>=@P_FROM_DATE
+and TIME_TABLE_DATEWISE_dDate<=@P_TO_DATE
+and TIME_TABLE_DATEWISE_nCourseId=@m_course_id
+and TIME_TABLE_DATEWISE_nStreamId=@m_stream_id
+and TIME_TABLE_DATEWISE_nSectionId=@m_sec_id
+and TIME_TABLE_DATEWISE_nIsActive=1
+and TIME_TABLE_DATEWISE_nBatch=@m_routine_year
+and TIME_TABLE_DATEWISE_nSemesterId=@m_routine_sem_id
+group by TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId
+
+
+update #TEMP1 set is_app=1 from Semester_Section_Group_Student_Relation 
+where Semester_Section_Group_Student_Relation_nStudentId=@m_student_id
+and Semester_Section_Group_Student_Relation_nSemesterId=@m_routine_sem_id
+and Semester_Section_Group_Student_Relation_nBatch=@m_routine_year
+and Semester_Section_Group_Student_Relation_nCourseId=@m_course_id
+and Semester_Section_Group_Student_Relation_nStreamID=@m_stream_id
+and Semester_Section_Group_Student_Relation_nSection=@m_sec_id
+and Semester_Section_Group_Student_Relation_nGroupId=GroupId1
+and Semester_Section_Group_Student_Relation_nSubjectId=SubjectId1
+
+
+
+insert into #TEMP2(
+date2,batch2,CourseId2,StreamId2,SectionId2,SemesterId2,SubjectId2,GroupId2,ctr2,present2
+)
+select 
+attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId,COUNT(*),SUM(Attendence_Student_Detail_nIsPresent)
+from attendence_student_detail
+where attendence_student_detail_nCollegeId=@P_COLLEGE_ID
+and attendence_student_detail_dDate>=@P_FROM_DATE
+and attendence_student_detail_dDate<=@P_TO_DATE
+and attendence_student_detail_nCourseId=@m_course_id
+and attendence_student_detail_nStreamId=@m_stream_id
+and attendence_student_detail_nSectionId=@m_sec_id
+and attendence_student_detail_nIsActive=1
+and attendence_student_detail_nBatchId=@m_routine_year
+and attendence_student_detail_nSemesterId=@m_routine_sem_id
+and Attendence_Student_Detail_nStudentId=@m_student_id
+group by attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId
+
+update #TEMP2 set absent2=ctr2-present2
+
+update #TEMP1 set present1=present2,absent1=absent2 from #TEMP2
+where date1=date2
+and batch1=batch2
+and CourseId1=CourseId2
+and StreamId1=StreamId2
+and SectionId1=SectionId2
+and SemesterId1=SemesterId2
+and SubjectId1=SubjectId2
+and GroupId1=GroupId2
+
+delete #TEMP1 where is_app=0
+
+
+insert into #TEMP3(
+date3,ctr3,present3
+)
+select date1,SUM(ctr1),SUM(present1)
+from #TEMP1 group by date1
+
+
+insert into #temp(week_id,day1,day2,day3,day4,day5,day6,day7)  
+select 0,'Sun','Mon','Tue','Wed','Thu','Fri','Sat'  
+
+
+set @m_current_date=@P_FROM_DATE  
+while @m_current_date<=@P_TO_DATE  
+begin  
+  
+ set @m_value1=''
+ set @m_value2=''
+  
+ set @m_week=DATEPART(WK,@m_current_date)  
+ set @m_day_of_week=DATEPART(DW,@m_current_date)  
+ set @m_day=DATEPART(D,@m_current_date)  
+   
+ set @m_field='day'+ltrim(str(@m_day_of_week))  
+   
+  
+ select @m_ctr=COUNT(*) from #temp where week_id=@m_week  
+ if @m_ctr=0  
+ begin  
+  insert into #temp(week_id) select @m_week  
+ end  
+ 
+ /*Data Loop*/  
+ set @m_value1=ltrim(str(@m_day)) 
+ select  @m_value2 = LTRIM(rtrim(str(present3)))+'/'+ LTRIM(rtrim(str(ctr3))) from   #TEMP3 where date3=@m_current_date
+ if @m_value2 is null
+ begin
+	set @m_value2=''
+ end
+ set @m_value1=@m_value1 + '<>' + @m_value2 + '<>'+ CONVERT(varchar(10),@m_current_date,103)
+ 
+  
+ set @sql='update #temp set ' + @m_field + '=''' + @m_value1 + ''' where week_id='+ltrim(str(@m_week))  
+ exec(@sql)  
+ 
+    
+  set @m_current_date=@m_current_date+1  
+end
+
+
+
+--update #TEMP set schedule_class=ctr3,present=present3 from  #TEMP3 where day_date=date3
+
+--update #TEMP set percentage=(present/schedule_class)*100 where schedule_class>0
+
+select * from #TEMP where week_id>0 order by week_id
+
+
+
+
+
+
+  
+  
+END  
+  
+  
+
+go
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE PROC [dbo].[Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance_With_Subject]  
+(  
+ @P_COLLEGE_ID int,  
+ @P_STUDENT_CODE VARCHAR(50),  
+ @P_FROM_DATE DATETIME,  
+ @P_TO_DATE DATETIME
+)  
+AS  
+BEGIN  
+  
+--exec Proc_Get_Student_Date_Wise_Schedule_Vs_Attendance_With_Subject 7,'DSC/2021/0099','2022/06/01','2022/09/30'
+
+  
+CREATE TABLE #TEMP1  
+(  
+date1 datetime,
+batch1 int,
+CourseId1 int,
+StreamId1 int,
+SectionId1 int,
+SemesterId1 int,
+SubjectId1 numeric(18,0),
+subject_name varchar(200),
+emp_code varchar(50),
+faculty varchar(100),
+GroupId1 int,
+Period1 int,
+ctr1 int default 0,
+is_app int default 0,
+present1  int default 0,
+absent1  int default 0,
+concat_data varchar(200),
+stat varchar(15) default '',
+upload1 varchar(max) default '',
+upload2 varchar(max) default '',
+upload3 varchar(max) default '',
+upload4 varchar(max) default '',
+upload5 varchar(max) default ''
+)  
+
+CREATE TABLE #TEMP2  
+(  
+date2 datetime,
+batch2 int,
+CourseId2 int,
+StreamId2 int,
+SectionId2 int,
+SemesterId2 int,
+SubjectId2 numeric(28,0),
+GroupId2 int,
+Period2 int,
+ctr2 int default 0,
+present2  int default 0,
+absent2  int default 0
+)  
+
+CREATE TABLE #TEMP_UPLOAD1
+(  
+concat_data1 varchar(200),
+link varchar(max) default '',
+res_type_id int
+)    
+
+CREATE TABLE #TEMP_UPLOAD2
+(  
+concat_data1 varchar(200),
+link varchar(max) default '',
+res_type_id2 int
+)      
+  
+declare @m_student_id numeric(18,0)
+declare @m_routine_year int
+declare @m_routine_sem_id int
+declare @m_course_id int
+declare @m_stream_id int
+declare @m_sec_id int
+declare @m_sem_no int
+declare @m_current_date datetime
+declare @m_period int
+declare @sql varchar(max)
+
+
+select @m_student_id=STD_STUDENT_MASTER_nStudentId,
+@m_routine_year=STD_STUDENT_MASTER_sRoutineBatchYr,
+@m_routine_sem_id=STD_STUDENT_MASTER_sRoutineSemId,
+@m_course_id=STD_STUDENT_BATCH_nCourseId,
+@m_stream_id=STD_STUDENT_BATCH_nStreamMainId
+from STD_STUDENT_MASTER_VIEW where STD_STUDENT_MASTER_sStudentRoll=@P_STUDENT_CODE
+
+
+select @m_sem_no=STD_SEMESTER_nSemNo from STD_SEMESTER where STD_SEMESTER_nSemesterId=@m_routine_sem_id
+
+select @m_sec_id=Semester_Student_Relation_nSection from Semester_Student_Relation
+where Semester_Student_Relation_nStudentId=@m_student_id
+and Semester_Student_Relation_nSemesterId=@m_routine_sem_id
+and Semester_Student_Relation_nBatch=@m_routine_year
+and Semester_Student_Relation_nCourseId=@m_course_id
+and Semester_Student_Relation_nStreamID=@m_stream_id
+
+
+insert into #TEMP1(
+date1,batch1,CourseId1,StreamId1,SectionId1,SemesterId1,SubjectId1,GroupId1,Period1,ctr1
+)
+select 
+TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId,TIME_TABLE_DATEWISE_nPeriodId,COUNT(*)
+from TIME_TABLE_DATEWISE
+where TIME_TABLE_DATEWISE_nCollegeId=@P_COLLEGE_ID
+and TIME_TABLE_DATEWISE_dDate>=@P_FROM_DATE
+and TIME_TABLE_DATEWISE_dDate<=@P_TO_DATE
+and TIME_TABLE_DATEWISE_nCourseId=@m_course_id
+and TIME_TABLE_DATEWISE_nStreamId=@m_stream_id
+and TIME_TABLE_DATEWISE_nSectionId=@m_sec_id
+and TIME_TABLE_DATEWISE_nIsActive=1
+and TIME_TABLE_DATEWISE_nBatch=@m_routine_year
+and TIME_TABLE_DATEWISE_nSemesterId=@m_routine_sem_id
+group by TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId,TIME_TABLE_DATEWISE_nPeriodId
+
+
+update #TEMP1 set is_app=1 from Semester_Section_Group_Student_Relation 
+where Semester_Section_Group_Student_Relation_nStudentId=@m_student_id
+and Semester_Section_Group_Student_Relation_nSemesterId=@m_routine_sem_id
+and Semester_Section_Group_Student_Relation_nBatch=@m_routine_year
+and Semester_Section_Group_Student_Relation_nCourseId=@m_course_id
+and Semester_Section_Group_Student_Relation_nStreamID=@m_stream_id
+and Semester_Section_Group_Student_Relation_nSection=@m_sec_id
+and Semester_Section_Group_Student_Relation_nGroupId=GroupId1
+and Semester_Section_Group_Student_Relation_nSubjectId=SubjectId1
+
+
+insert into #TEMP2(
+date2,batch2,CourseId2,StreamId2,SectionId2,SemesterId2,SubjectId2,GroupId2,Period2,ctr2,present2
+)
+select 
+attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId,attendence_student_detail_nPeriodId,
+COUNT(*),SUM(Attendence_Student_Detail_nIsPresent)
+from attendence_student_detail
+where attendence_student_detail_nCollegeId=@P_COLLEGE_ID
+and attendence_student_detail_dDate>=@P_FROM_DATE
+and attendence_student_detail_dDate<=@P_TO_DATE
+and attendence_student_detail_nCourseId=@m_course_id
+and attendence_student_detail_nStreamId=@m_stream_id
+and attendence_student_detail_nSectionId=@m_sec_id
+and attendence_student_detail_nIsActive=1
+and attendence_student_detail_nBatchId=@m_routine_year
+and attendence_student_detail_nSemesterId=@m_routine_sem_id
+and Attendence_Student_Detail_nStudentId=@m_student_id
+group by attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId,attendence_student_detail_nPeriodId
+
+update #TEMP2 set absent2=ctr2-present2
+
+update #TEMP1 set present1=present2,absent1=absent2 from #TEMP2
+where date1=date2
+and batch1=batch2
+and CourseId1=CourseId2
+and StreamId1=StreamId2
+and SectionId1=SectionId2
+and SemesterId1=SemesterId2
+and SubjectId1=SubjectId2
+and GroupId1=GroupId2
+and Period1=Period2
+
+delete #TEMP1 where is_app=0
+delete #TEMP1 where ctr1=0
+
+update #TEMP1 set subject_name=STD_SUBJECT_sSUBJECT_CODE+' - '+STD_SUBJECT_sSUBJECT_NAME from std_subject_master_new
+where SubjectId1=STD_SUBJECT_nSUBJECT_ID
+
+
+update #TEMP1 set faculty=TIME_TABLE_DATEWISE_FACULTY_nFacultyName,emp_code=TIME_TABLE_DATEWISE_FACULTY_nFacultyCode
+from TIME_TABLE_DATEWISE_FACULTY  
+where TIME_TABLE_DATEWISE_FACULTY_dDate=date1
+and TIME_TABLE_DATEWISE_FACULTY_nBatch=batch1
+and TIME_TABLE_DATEWISE_FACULTY_nCourseId=CourseId1
+and TIME_TABLE_DATEWISE_FACULTY_nStreamId=StreamId1
+and TIME_TABLE_DATEWISE_FACULTY_nSectionId=SectionId1
+and TIME_TABLE_DATEWISE_FACULTY_nSemesterId=SemesterId1
+and TIME_TABLE_DATEWISE_FACULTY_nDayId=DATEPART(WEEKDAY, date1)
+and TIME_TABLE_DATEWISE_FACULTY_nPeriodId=Period1
+and TIME_TABLE_DATEWISE_FACULTY_nSubjectId=SubjectId1
+and TIME_TABLE_DATEWISE_FACULTY_nGroupId=GroupId1
+and TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@P_COLLEGE_ID
+and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1
+ 
+update #TEMP1 set concat_data=LTRIM(rtrim(str(Period1)))+'_'+
+                              LTRIM(rtrim(str(SubjectId1)))+'_'+
+                              LTRIM(rtrim(str(CourseId1)))+'_'+
+                              LTRIM(rtrim(str(StreamId1)))+'_'+
+                              LTRIM(rtrim(str(SectionId1)))+'_'+
+                              LTRIM(rtrim(str(SemesterId1)))+'_'+
+                              LTRIM(rtrim(str(GroupId1)))+'_'+
+                              LTRIM(rtrim(str(batch1)))+'_'+
+                              convert(varchar(10),date1,103)
+                              
+
+insert into #TEMP_UPLOAD1(concat_data1,link,res_type_id)
+select
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId)))+'_'+
+LTRIM(rtrim(str(TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch)))+'_'+
+convert(varchar(10),TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate,103)  , TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink,
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId
+from TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD 
+where  TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate>=@P_FROM_DATE
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate<=@P_TO_DATE   
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId=@P_COLLEGE_ID             
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive=1
+
+
+update #TEMP_UPLOAD1 set link='../LmsUploadContents/'+link where res_type_id in(1,2,5)
+
+insert into #TEMP_UPLOAD2(res_type_id2,concat_data1,link)
+SELECT b.res_type_id, b.concat_data1,(
+ STUFF((SELECT '+++' + a.link
+            FROM #TEMP_UPLOAD1 a where a.concat_data1=b.concat_data1 and a.res_type_id=b.res_type_id
+            FOR XML PATH('')) ,1,3,'')) as concat_link
+from      #TEMP_UPLOAD1 b   
+group by  b.res_type_id,b.concat_data1     
+
+
+update #TEMP1 set upload1=link from #TEMP_UPLOAD2 where concat_data= concat_data1 and  res_type_id2=1                         
+update #TEMP1 set upload2=link from #TEMP_UPLOAD2 where concat_data= concat_data1 and  res_type_id2=2                         
+update #TEMP1 set upload3=link from #TEMP_UPLOAD2 where concat_data= concat_data1 and  res_type_id2=3                         
+update #TEMP1 set upload4=link from #TEMP_UPLOAD2 where concat_data= concat_data1 and  res_type_id2=4                         
+update #TEMP1 set upload5=link from #TEMP_UPLOAD2 where concat_data= concat_data1 and  res_type_id2=5                         
+ 
+
+ 
+update #TEMP1 set stat='Present' where present1>0
+update #TEMP1 set stat='Absent' where absent1>0
+
+
+select *
+from #TEMP1
+order by date1,period1
+
+
+
+
+  
+  
+END  
+  
+  
+
+go
+
+      
+          
+alter PROCEDURE [dbo].[Proc_Get_Subject_details]               
+(              
+ @p_Sub_code varchar(100)='%'              
+)              
+AS              
+begin              
+create table #temp              
+(              
+SubjectId numeric(18,0),              
+SubjectName varchar(100),              
+SubjectShortName varchar(100),              
+SubjectCode varchar(100),              
+SubjectIsTheory int,              
+SubjectIsTheoryDes varchar(50),              
+CourseId int,              
+CourseName varchar(100),              
+IsActive int default 0,    
+StreamId int,    
+StreamName varchar(100),    
+SemNo int,  
+subject_name_code varchar(500)              
+)              
+              
+insert into #temp (SubjectId,SubjectName,SubjectShortName,SubjectCode,SubjectIsTheory,CourseId,IsActive,StreamId,SemNo)              
+     select   STD_SUBJECT_nSUBJECT_ID,              
+     STD_SUBJECT_sSUBJECT_NAME,              
+     STD_SUBJECT_sSUBJECT_SHORT_NAME,              
+     STD_SUBJECT_sSUBJECT_CODE,              
+     STD_SUBJECT_sSUBJECT_IS_THEORY,              
+     STD_SUBJECT_sSUBJECT_COURSEID,              
+     STD_SUBJECT_sSUBJECT_IS_ACTIVE,    
+     STD_SUBJECT_SUBJECT_nStreamId,    
+     STD_SUBJECT_SUBJECT_nSemNo              
+   from STD_SUBJECT_MASTER_NEW              
+                 
+update #temp set CourseName=STD_COURSE_MASTER_sNAME from STD_COURSE_MASTER               
+where STD_COURSE_MASTER_nID=CourseId              
+    
+update #temp set StreamName=STD_STREAM_MASTER_sNAME from STD_STREAM_MASTER         
+where STD_STREAM_MASTER_nID=StreamId              
+    
+              
+update #temp set SubjectIsTheoryDes ='Tutorial' where SubjectIsTheory=2              
+update #temp set SubjectIsTheoryDes='Practical/Sessional' where SubjectIsTheory=0              
+update #temp set SubjectIsTheoryDes='Lecture' where SubjectIsTheory=1         
+  
+update #temp set subject_name_code=SubjectCode + ' - ' +SubjectName     
+              
+select * from #temp              
+where SubjectCode like @p_Sub_code and IsActive =1           
+ order by SubjectCode              
+              
+end 
+
+go
+
+alter PROCEDURE [dbo].[Proc_Save_Subject_master]     
+(    
+@p_SubjectId numeric(18,0)=0,    
+@p_SubjectName varchar(100),    
+@p_SubjectShortName varchar(100),    
+@p_SubjectCode varchar(100),    
+@p_SubjectIsTheory int,    
+@p_UnitFactor int=0,    
+@p_MaxScore int=0,    
+@p_CreditPoint int=0,    
+@p_IsActive int,    
+@p_CourseId int=0,  
+@p_StreamId int=0,  
+@p_SemNo int=0  
+    
+)    
+AS    
+BEGIN    
+    
+declare @m_err_no int    
+declare @m_err_mesg varchar(100)    
+set @m_err_no=0    
+    
+    
+    
+    
+begin try    
+ begin transaction     
+    
+    
+  /*getting admin doc flag*/    
+  exec Proc_Save_Subject_Master_Main @p_SubjectId,@p_SubjectName,@p_SubjectShortName,@p_SubjectCode,@p_SubjectIsTheory,    
+           @p_UnitFactor,@p_MaxScore,@p_CreditPoint,@p_IsActive,@p_CourseId,@p_StreamId,@p_SemNo    
+ commit transaction    
+ set @m_err_mesg='Success'    
+end try    
+    
+    
+begin catch    
+ set @m_err_no=1    
+ set @m_err_mesg='Error In Saving'     
+ rollback transaction     
+end catch    
+    
+    
+select @m_err_mesg as err_mesg,@m_err_no as err_no    
+END    
+    
+go
+
+    
+    
+alter PROCEDURE [dbo].[Proc_Save_Subject_Master_Main]     
+(    
+@p_SubjectId numeric(18,0)=0,    
+@p_SubjectName varchar(100),    
+@p_SubjectShortName varchar(100),    
+@p_SubjectCode varchar(100),    
+@p_SubjectIsTheory int,    
+@p_UnitFactor int=0,    
+@p_MaxScore int=0,    
+@p_CreditPoint int=0,    
+@p_IsActive int,    
+@p_CourseId int,  
+@p_StreamId int=0,  
+@p_SemNo int=0  
+    
+)    
+AS    
+BEGIN    
+    
+    
+if @p_SubjectId=0     
+ begin    
+  insert into STD_SUBJECT_MASTER_NEW(    
+ STD_SUBJECT_sSUBJECT_NAME,    
+ STD_SUBJECT_sSUBJECT_SHORT_NAME,    
+ STD_SUBJECT_sSUBJECT_CODE,    
+ STD_SUBJECT_sSUBJECT_IS_THEORY,    
+ STD_SUBJECT_sSUBJECT_nUNIT_FACTOR,    
+ STD_SUBJECT_sSUBJECT_nMAX_SCORE,    
+ STD_SUBJECT_nSUBJECT_nCreditPoint,    
+ STD_SUBJECT_sSUBJECT_IS_ACTIVE,    
+ STD_SUBJECT_sSUBJECT_COURSEID,  
+ STD_SUBJECT_SUBJECT_nStreamId,  
+ STD_SUBJECT_SUBJECT_nSemNo      
+  )    
+ select     
+  @p_SubjectName,    
+  @p_SubjectShortName,    
+  @p_SubjectCode,    
+  @p_SubjectIsTheory,    
+  @p_UnitFactor,    
+  @p_MaxScore,    
+  @p_CreditPoint,    
+  @p_IsActive,    
+  @p_CourseId,  
+  @p_StreamId,  
+  @p_SemNo    
+     
+ end     
+else    
+ begin    
+ update STD_SUBJECT_MASTER_NEW set STD_SUBJECT_sSUBJECT_NAME=@p_SubjectName,    
+          STD_SUBJECT_sSUBJECT_SHORT_NAME=@p_SubjectShortName,    
+          STD_SUBJECT_sSUBJECT_CODE=@p_SubjectCode,    
+          STD_SUBJECT_sSUBJECT_IS_THEORY=@p_SubjectIsTheory,    
+          STD_SUBJECT_sSUBJECT_nUNIT_FACTOR=@p_UnitFactor,    
+          STD_SUBJECT_sSUBJECT_nMAX_SCORE=@p_MaxScore,    
+          STD_SUBJECT_nSUBJECT_nCreditPoint=@p_CreditPoint,    
+          STD_SUBJECT_sSUBJECT_IS_ACTIVE=@p_IsActive,    
+          STD_SUBJECT_sSUBJECT_COURSEID=@p_CourseId,  
+          STD_SUBJECT_SUBJECT_nStreamId=@p_StreamId,  
+          STD_SUBJECT_SUBJECT_nSemNo=@p_SemNo    
+        where STD_SUBJECT_nSUBJECT_ID=@p_SubjectId    
+ end    
+END    
+    
+go
+
+  
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Module]   
+(  
+ @p_name varchar(100)='%'  
+)  
+AS  
+BEGIN  
+  
+  
+  
+  
+select   
+poco_module_nId as module_id ,  
+poco_module_sName as module_name  
+from poco_module   
+order by poco_module_sName  
+  
+END  
+ 
+go
+
+    
+    
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Batch_Subject_Wise_Syllabus]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0),  
+@p_lecture int,  
+@p_tutorial int,  
+@p_lab int,  
+@p_total_contact int,  
+@p_credit numeric(18,2),  
+@p_module_id numeric(18,0),  
+@p_sub_module_id numeric(18,0),  
+@p_sub_module_sl int,  
+@p_topic ntext,  
+@p_details ntext,  
+@p_class_count int   
+)    
+AS    
+BEGIN    
+    
+declare @m_err_no int    
+declare @m_err_mesg varchar(100)    
+declare @m_gen_err int    
+declare @m_grn_id numeric(18,0)    
+    
+declare @m_doc_no varchar(50)    
+declare @m_document_flag varchar(1)    
+    
+set @m_err_no=0    
+    
+begin try    
+ begin transaction     
+    
+    
+    
+    
+  /*adding data in ugrm Detail*/    
+  set @m_err_mesg='Error in saving Syllabus Main'    
+  exec Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Main @p_batch_id,    
+             @p_subject_id,    
+             @p_lecture ,    
+             @p_tutorial ,    
+             @p_lab,  
+             @p_total_contact,     
+             @p_credit      
+        /***********************/    
+          
+          
+   
+  /*adding data in Syllabus Detail*/    
+  if @p_module_id>0  
+  begin  
+   set @m_err_mesg='Error in saving Syllabus Det'    
+   exec Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Detail @p_batch_id,    
+     @p_subject_id,    
+     @p_module_id ,    
+     @p_sub_module_id ,    
+     @p_sub_module_sl,  
+     @p_topic,  
+     @p_details,     
+     @p_class_count    
+   end    
+   /***********************/    
+                  
+      
+ commit transaction    
+ set @m_err_mesg='Success'    
+end try    
+    
+    
+begin catch    
+ set @m_err_no=1    
+ rollback transaction     
+end catch    
+    
+    
+select @m_err_mesg as err_mesg,@m_err_no as err_no    
+END    
+    
+    go
+
+
+    
+    
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Main]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0),  
+@p_lecture int,  
+@p_tutorial int,  
+@p_lab int,  
+@p_total_contact int,  
+@p_credit numeric(18,2)   
+)    
+AS    
+BEGIN    
+  
+declare @m_ctr int  
+  
+select @m_ctr=COUNT(*) from poco_subject_master_main_for_batch where   
+poco_subject_master_main_for_batch_nBatchId=@p_batch_id  
+and poco_subject_master_main_for_batch_nSubjectId=@p_subject_id  
+  
+if @m_ctr=0  
+begin  
+ insert into poco_subject_master_main_for_batch(  
+ poco_subject_master_main_for_batch_nBatchId,  
+ poco_subject_master_main_for_batch_nSubjectId  
+ )  
+ select @p_batch_id,@p_subject_id  
+end  
+  
+update poco_subject_master_main_for_batch  set  
+poco_subject_master_main_for_batch_nLecture=@p_lecture,  
+poco_subject_master_main_for_batch_nTutorial=@p_tutorial,  
+poco_subject_master_main_for_batch_nLab=@p_lab,  
+poco_subject_master_main_for_batch_nTotalContact=@p_total_contact,  
+poco_subject_master_main_for_batch_nCredit=@p_credit  
+where poco_subject_master_main_for_batch_nBatchId=@p_batch_id  
+and poco_subject_master_main_for_batch_nSubjectId=@p_subject_id  
+  
+  
+END    
+    
+    go
+
+  
+    
+    
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Detail]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0),  
+@p_module_id numeric(18,0),  
+@p_sub_module_id numeric(18,0),  
+@p_sub_module_sl int,  
+@p_topic ntext,  
+@p_details ntext,  
+@p_class_count int   
+)    
+AS    
+BEGIN    
+  
+declare @m_ctr int  
+  
+if @p_sub_module_id=0  
+begin  
+ insert into poco_subject_master_module_detail_for_batch(  
+  poco_subject_master_module_detail_for_batch_nBatchId,  
+  poco_subject_master_module_detail_for_batch_nSubjectId,  
+  poco_subject_master_module_detail_for_batch_nModuleId,  
+  poco_subject_master_module_detail_for_batch_nSubModuleSl,  
+  poco_subject_master_module_detail_for_batch_sTopic,  
+  poco_subject_master_module_detail_for_batch_sDetails,  
+  poco_subject_master_module_detail_for_batch_nClassCount,  
+  poco_subject_master_module_detail_for_batch_nIsActive   
+ )  
+ select @p_batch_id,@p_subject_id,@p_module_id,@p_sub_module_sl,@p_topic,@p_details,@p_class_count,1  
+end  
+else  
+begin  
+ update poco_subject_master_module_detail_for_batch set   
+ poco_subject_master_module_detail_for_batch_nSubModuleSl=@p_sub_module_sl,  
+ poco_subject_master_module_detail_for_batch_sTopic=@p_topic,  
+ poco_subject_master_module_detail_for_batch_sDetails=@p_details,  
+ poco_subject_master_module_detail_for_batch_nClassCount=@p_class_count  
+ where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id  
+ and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id  
+ and poco_subject_master_module_detail_for_batch_nModuleId=@p_module_id  
+ and poco_subject_master_module_detail_for_batch_nSubModuleId=@p_sub_module_id  
+end  
+  
+  
+END    
+    
+    go
+
+    
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Main]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0)  
+)    
+AS    
+BEGIN    
+  
+  
+select   
+poco_subject_master_main_for_batch_nLecture as lecture,  
+poco_subject_master_main_for_batch_nTutorial as tutorial,  
+poco_subject_master_main_for_batch_nLab as lab,  
+poco_subject_master_main_for_batch_nTotalContact as tot_contact,  
+poco_subject_master_main_for_batch_nCredit as credit  
+from poco_subject_master_main_for_batch where   
+poco_subject_master_main_for_batch_nBatchId=@p_batch_id  
+and poco_subject_master_main_for_batch_nSubjectId=@p_subject_id  
+  
+  
+  
+END    
+    
+    go
+
+    
+CREATE PROCEDURE [dbo].[Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Detail]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0)  
+)    
+AS    
+BEGIN    
+  
+create table #temp  
+(  
+ModuleId numeric(18,0),  
+SubModuleId numeric(18,0),  
+Topic ntext,  
+Details ntext,  
+ClassCount int,  
+module_name varchar(50),  
+sub_module_sl int,  
+is_module int default 1  
+)  
+  
+insert into #temp(  
+ModuleId,SubModuleId,Topic,Details,ClassCount,sub_module_sl  
+)  
+select   
+poco_subject_master_module_detail_for_batch_nModuleId,  
+poco_subject_master_module_detail_for_batch_nSubModuleId,  
+poco_subject_master_module_detail_for_batch_sTopic,  
+poco_subject_master_module_detail_for_batch_sDetails,  
+poco_subject_master_module_detail_for_batch_nClassCount,  
+poco_subject_master_module_detail_for_batch_nSubModuleSl  
+from poco_subject_master_module_detail_for_batch  
+where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id  
+and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id  
+and poco_subject_master_module_detail_for_batch_nIsActive=1  
+  
+update #temp set module_name=poco_module_sName from poco_module  
+where ModuleId=poco_module_nId  
+  
+  
+update #temp set is_module=2 where ModuleId>0 and SubModuleId>0  
+  
+  
+  
+select * from #temp order by module_name,sub_module_sl  
+  
+  
+END    
+    
+    go
+
+  
+alter PROCEDURE [dbo].[Proc_Get_Poco_Batch_Subject_Wise_Syllabus_Main_Detail]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0),  
+@p_module varchar(20)='%'  
+)    
+AS    
+BEGIN    
+  
+  
+create table #temp  
+(  
+ModuleDetail varchar(100),  
+ModuleId numeric(18,0),  
+SubModuleId  numeric(18,0),  
+SubModuleSl numeric(18,0),  
+Topic ntext,  
+Details ntext,  
+Lecture int  
+)  
+  
+  
+insert into #temp  
+(  
+ModuleId,SubModuleId,SubModuleSl,Topic,Details,Lecture  
+)  
+select   
+poco_subject_master_module_detail_for_batch_nModuleId,  
+poco_subject_master_module_detail_for_batch_nSubModuleId,  
+poco_subject_master_module_detail_for_batch_nSubModuleSl,  
+poco_subject_master_module_detail_for_batch_sTopic,  
+poco_subject_master_module_detail_for_batch_sDetails,  
+poco_subject_master_module_detail_for_batch_nClassCount  
+from poco_subject_master_module_detail_for_batch  
+where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id  
+and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id  
+and poco_subject_master_module_detail_for_batch_nIsActive=1  
+  
+update #temp set ModuleDetail=poco_module_sName from poco_module where ModuleId=poco_module_nId  
+update #temp set ModuleDetail=ModuleDetail+'.'+ltrim(str(SubModuleSl))  
+  
+  
+select * from #temp where Lecture>0 and ModuleDetail like @p_module  
+order by ModuleId,SubModuleSl  
+  
+END    
+    
+go
+
+  
+CREATE PROCEDURE [dbo].[Proc_Get_Faculty_Wise_Lesson_plan_Main]     
+(    
+@p_Date datetime,  
+@p_Batch int,  
+@p_CourseId int,  
+@p_StreamId int,  
+@p_SectionId int,  
+@p_SemesterId int,  
+@p_PeriodId int,  
+@p_SubjectId numeric(18,0),  
+@p_GroupId int,  
+@p_FacultyCode varchar(100),  
+@p_CollegeId int  
+)    
+AS    
+BEGIN    
+  
+create table #temp  
+(  
+module_id int,  
+sub_module_id numeric(18,0),  
+sub_module_sl int,  
+ModuleDetail varchar(50),  
+topic varchar(8000),  
+lecture int,  
+max_lecture int  
+  
+)  
+  
+declare @m_DayId int  
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)  
+  
+    
+insert into #temp(topic,sub_module_id,lecture)  
+select   
+TIME_TABLE_DATEWISE_FACULTY_LP_sTopic,  
+TIME_TABLE_DATEWISE_FACULTY_LP_nSubModuleId,  
+TIME_TABLE_DATEWISE_FACULTY_LP_nLecture  
+from TIME_TABLE_DATEWISE_FACULTY_LP      
+where TIME_TABLE_DATEWISE_FACULTY_LP_dDate=@p_Date  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nBatch=@p_Batch  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nCourseId=@p_CourseId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nStreamId=@p_StreamId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSectionId=@p_SectionId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSemesterId=@p_SemesterId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nDayId=@m_DayId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nPeriodId=@p_PeriodId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nSubjectId=@p_SubjectId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nGroupId=@p_GroupId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nFacultyCode=@p_FacultyCode  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nCollegeId=@p_CollegeId  
+and TIME_TABLE_DATEWISE_FACULTY_LP_nIsActive=1  
+and TIME_TABLE_DATEWISE_FACULTY_LP_sActiveFlag='A'  
+  
+update #temp set module_id=poco_subject_master_module_detail_for_batch_nModuleId,  
+sub_module_sl=poco_subject_master_module_detail_for_batch_nSubModuleSl,  
+max_lecture=poco_subject_master_module_detail_for_batch_nClassCount   
+from poco_subject_master_module_detail_for_batch where poco_subject_master_module_detail_for_batch_nSubModuleId=sub_module_id  
+and poco_subject_master_module_detail_for_batch_nSubjectId=@p_SubjectId  
+  
+update #temp set ModuleDetail=poco_module_sName from poco_module where module_id=poco_module_nId  
+update #temp set ModuleDetail=ModuleDetail+'.'+ltrim(str(sub_module_sl))  
+  
+  
+select * from #temp  
+  
+END    
+    
+go
+
+  
+  
+CREATE PROCEDURE [dbo].[Proc_Get_Faculty_Wise_Lesson_plan_Resource]     
+(    
+@p_Date datetime,  
+@p_Batch int,  
+@p_CourseId int,  
+@p_StreamId int,  
+@p_SectionId int,  
+@p_SemesterId int,  
+@p_PeriodId int,  
+@p_SubjectId numeric(18,0),  
+@p_GroupId int,  
+@p_FacultyCode varchar(100),  
+@p_CollegeId int  
+)    
+AS    
+BEGIN    
+  
+create table #temp  
+(  
+Edit varchar(10) default 'Edit',  
+UniqueKeyId numeric(18,0),  
+ResourceTypeId int,  
+ResourceTypeName varchar(50),  
+Desp varchar(200),  
+Link varchar(200),  
+is_upload int default 0  
+)  
+  
+declare @m_DayId int  
+set @m_DayId=DATEPART(WEEKDAY, @p_Date)  
+  
+    
+insert into #temp(UniqueKeyId,ResourceTypeId,Desp,Link)  
+select   
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nUniqueKeyId,  
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nResourceTypeId,  
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sDesp,  
+TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_sLink  
+from TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD      
+where TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_dDate=@p_Date  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nBatch=@p_Batch  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCourseId=@p_CourseId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nStreamId=@p_StreamId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSectionId=@p_SectionId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSemesterId=@p_SemesterId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nDayId=@m_DayId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nPeriodId=@p_PeriodId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nSubjectId=@p_SubjectId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nGroupId=@p_GroupId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nFacultyCode=@p_FacultyCode  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nCollegeId=@p_CollegeId  
+and TIME_TABLE_DATEWISE_FACULTY_WISE_UPLOAD_nIsActive=1  
+  
+  
+update #temp set ResourceTypeName=poco_upload_resource_type_sName,is_upload=poco_upload_resource_type_nIsUpload  
+from poco_upload_resource_type where ResourceTypeId=poco_upload_resource_type_nId  
+  
+  
+select * from #temp  
+order by UniqueKeyId  
+  
+END    
+    
+go
+
+  
+  
+CREATE PROCEDURE [dbo].[Proc_Save_Program_Outcome_Mst]   
+(  
+@p_period_id int,  
+@p_course_id int,  
+@p_prog_type_id int,  
+@p_prog_id numeric(18,0),  
+@p_sl varchar(50),  
+@p_desp varchar(8000),  
+@p_detail varchar(8000)  
+  
+)  
+AS  
+BEGIN  
+  
+declare @m_err_no int  
+declare @m_err_mesg varchar(100)  
+declare @m_gen_err int  
+declare @m_grn_id numeric(18,0)  
+  
+declare @m_doc_no varchar(50)  
+declare @m_document_flag varchar(1)  
+  
+set @m_err_no=0  
+  
+begin try  
+ begin transaction   
+  
+ if(@p_prog_id=0)  
+ begin  
+  insert into poco_program_outcome(  
+  poco_program_outcome_nPeriod,  
+  poco_program_outcome_nCourseId,  
+  poco_program_outcome_nType,  
+  poco_program_outcome_sNo,  
+  poco_program_outcome_sDesp,  
+  poco_program_outcome_sDetails  
+  )  
+  select   
+  @p_period_id,  
+  @p_course_id,  
+  @p_prog_type_id,  
+  @p_sl,  
+  @p_desp,  
+  @p_detail    
+ end  
+ else  
+ begin  
+  update poco_program_outcome set   
+  poco_program_outcome_sNo=@p_sl,  
+  poco_program_outcome_sDesp=@p_desp,  
+  poco_program_outcome_sDetails=@p_detail  
+  where poco_program_outcome_nPeriod=@p_period_id  
+  and poco_program_outcome_nCourseId=@p_course_id  
+  and poco_program_outcome_nType=@p_prog_type_id  
+  and poco_program_outcome_nRowId=@p_prog_id  
+ end  
+   
+   
+  
+    
+ commit transaction  
+ set @m_err_mesg='Success'  
+end try  
+  
+  
+begin catch  
+ set @m_err_no=1  
+ rollback transaction   
+end catch  
+  
+  
+select @m_err_mesg as err_mesg,@m_err_no as err_no  
+END  
+  
+  
+go
+
+
+  
+create PROCEDURE [dbo].[Proc_Save_Course_Outcome_Mst]   
+(  
+@p_period_id int,  
+@p_subject_id int,  
+@p_co_id numeric(18,0),  
+@p_sl varchar(50),  
+@p_detail varchar(8000)  
+  
+)  
+AS  
+BEGIN  
+  
+declare @m_err_no int  
+declare @m_err_mesg varchar(100)  
+declare @m_gen_err int  
+declare @m_grn_id numeric(18,0)  
+  
+declare @m_doc_no varchar(50)  
+declare @m_document_flag varchar(1)  
+  
+set @m_err_no=0  
+  
+begin try  
+ begin transaction   
+  
+ if(@p_co_id=0)  
+ begin  
+  insert into poco_subject_wise_co_master(  
+  poco_subject_wise_co_master_nPeriodId,  
+  poco_subject_wise_co_master_nSubjectId,  
+  poco_subject_wise_co_master_sCoNo,  
+  poco_subject_wise_co_master_sDetails  
+    )  
+  select   
+  @p_period_id,  
+  @p_subject_id,  
+  @p_sl,  
+  @p_detail    
+ end  
+ else  
+ begin  
+  update poco_subject_wise_co_master set   
+  poco_subject_wise_co_master_sCoNo=@p_sl,  
+  poco_subject_wise_co_master_sDetails=@p_detail  
+  where poco_subject_wise_co_master_nPeriodId=@p_period_id  
+  and poco_subject_wise_co_master_nSubjectId=@p_subject_id  
+  and poco_subject_wise_co_master_nRowId=@p_co_id  
+ end  
+   
+   
+  
+    
+ commit transaction  
+ set @m_err_mesg='Success'  
+end try  
+  
+  
+begin catch  
+ set @m_err_no=1  
+ rollback transaction   
+end catch  
+  
+  
+select @m_err_mesg as err_mesg,@m_err_no as err_no  
+END  
+  
+  
+  GO
+
+   
+  
+  
+alter PROCEDURE [dbo].[Proc_Disp_Poco_Subject_Wise_Co_Attainment_Consolidated]   
+(  
+@p_branch_id int,  
+@p_course_id int,  
+@p_stream_id int,  
+@p_period_id int,  
+@p_subject_id numeric(18,0),  
+@p_sem_no int,  
+@p_exam_main_id int  
+)  
+AS  
+BEGIN  
+--Proc_Disp_Poco_Subject_Wise_Co_Attainment_Consolidated  100,2,4,1,2936,6,1  
+  
+declare @sql as varchar(8000)  
+declare @m_co_id numeric(18,0)  
+  
+declare @m_std_count numeric(18,2)  
+declare @m_score_count numeric(18,2)  
+  
+declare @m_cie_percentage numeric(18,2)  
+declare @m_cie_level numeric(18,2)  
+  
+declare @m_see_level numeric(18,2)  
+  
+declare @m_overall_co_attainment numeric(18,2)  
+  
+  
+  
+  
+create table #temp  
+(  
+sl numeric(18,0) identity(1,1),  
+co_id numeric(18,0),  
+co_name varchar(1000),  
+average  numeric(18,2) default 0,  
+g_60  numeric(18,2) default 0,  
+b_40_60  numeric(18,2) default 0,  
+l_40  numeric(18,2) default 0,  
+Level_Achived numeric(18,2) default 0  
+)  
+  
+  
+create table #temp1  
+(  
+co_id1 numeric(18,0),  
+std_id1  numeric(18,0),  
+tot_marks numeric(18,2),   
+obtained_marks numeric(18,2) default 0,  
+pcent1 numeric(18,2) default 0,  
+Score1 numeric(18,2) default 0,  
+grade1 varchar(10),  
+grade_to_percent numeric(18,2) default 0  
+)  
+  
+create table #temp_po  
+(  
+po_id int,  
+po_name varchar(100),  
+scale numeric(18,2),  
+score  numeric(18,2),  
+caption varchar(200) default ''  
+)  
+  
+create table #temp_po1  
+(  
+po_id1 int,  
+scale1 numeric(18,2)  
+)  
+  
+  
+  
+/**********Calculation Question Based*******************/  
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)  
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade  
+from poco_student_marks_main_detail_view  
+where poco_student_marks_main_nBranchId=@p_branch_id  
+and poco_student_marks_main_nCourseId=@p_course_id  
+and poco_student_marks_main_nStreamId=@p_stream_id  
+and poco_student_marks_main_nSemNo=@p_sem_no  
+and poco_student_marks_main_nSubjectId=@p_subject_id  
+and poco_student_marks_main_nPeriodId=@p_period_id  
+and poco_student_marks_main_nExamMainId=@p_exam_main_id  
+and poco_student_marks_detail_sFlag='ATTEND'  
+and poco_subject_wise_co_master_sCoNo<>'DIRECT'   
+group by poco_exam_question_master_nCoId,  
+poco_student_marks_main_nStudentId,  
+poco_student_marks_detail_sGrade  
+  
+  
+update #temp1 set pcent1=(obtained_marks/tot_marks)*100 where tot_marks>0 and grade1='NA'  
+  
+  
+  
+  
+  
+  
+  
+update #temp1 set Score1=3 where pcent1>=60  
+update #temp1 set Score1=2 where pcent1>=40 and pcent1<60  
+update #temp1 set Score1=1 where pcent1<40   
+  
+  
+insert into #temp(  
+co_id,average  
+)  
+select co_id1,AVG(Score1)  
+from #temp1   
+group by co_id1  
+order by co_id1  
+  
+declare m_cursor CURSOR LOCAL for select co_id from #temp  
+OPEN m_cursor   
+FETCH NEXT FROM m_cursor   
+INTO @m_co_id  
+WHILE @@FETCH_STATUS = 0  
+BEGIN  
+   
+ select @m_std_count=COUNT(*) from #temp1 where co_id1=@m_co_id  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=3  
+ update #temp set g_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=2  
+ update #temp set b_40_60=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+ select @m_score_count=COUNT(*) from #temp1 where co_id1=@m_co_id and Score1=1  
+ update #temp set l_40=(@m_score_count/@m_std_count)*100 where co_id=@m_co_id and @m_std_count>0  
+   
+  
+ FETCH NEXT FROM m_cursor   
+ INTO @m_co_id  
+END  
+CLOSE m_cursor   
+DEALLOCATE m_cursor   
+  
+update #temp set Level_Achived=3 where g_60>=80  
+update #temp set Level_Achived=2 where g_60>=70 and g_60<80  
+update #temp set Level_Achived=1 where g_60>=60 and g_60<70  
+  
+update #temp set co_name=poco_subject_wise_co_master_sCoNo from poco_subject_wise_co_master  
+where co_id=poco_subject_wise_co_master_nRowId  
+  
+  
+/********CIE % calculation**********/  
+select @m_cie_percentage=avg(g_60) from #temp where co_name<>'DIRECT'  
+if @m_cie_percentage>=80  
+begin  
+ set @m_cie_level=3  
+end  
+else if @m_cie_percentage>=70 and @m_cie_percentage<80  
+begin  
+ set @m_cie_level=2  
+end  
+else if @m_cie_percentage>=60 and @m_cie_percentage<70  
+begin  
+ set @m_cie_level=1  
+end  
+else  
+begin  
+ set @m_cie_level=0  
+end  
+  
+insert into #temp(co_name,g_60,Level_Achived)  
+select 'Avg CO Attainment Through CIE',@m_cie_percentage,@m_cie_level  
+  
+/**********Calculation Grade Based*******************/  
+delete from #temp1  
+  
+insert into #temp1(co_id1,std_id1,tot_marks,obtained_marks,grade1)  
+select poco_exam_question_master_nCoId,poco_student_marks_main_nStudentId,sum(poco_exam_question_master_nMarks),SUM(poco_student_marks_detail_nMarks),poco_student_marks_detail_sGrade  
+from poco_student_marks_main_detail_view  
+where poco_student_marks_main_nBranchId=@p_branch_id  
+and poco_student_marks_main_nCourseId=@p_course_id  
+and poco_student_marks_main_nStreamId=@p_stream_id  
+and poco_student_marks_main_nSemNo=@p_sem_no  
+and poco_student_marks_main_nSubjectId=@p_subject_id  
+and poco_student_marks_main_nPeriodId=@p_period_id  
+and poco_student_marks_main_nExamMainId=@p_exam_main_id  
+and poco_student_marks_detail_sFlag='ATTEND'  
+and poco_subject_wise_co_master_sCoNo='DIRECT'   
+group by poco_exam_question_master_nCoId,  
+poco_student_marks_main_nStudentId,  
+poco_student_marks_detail_sGrade  
+  
+update #temp1 set pcent1=90 where grade1='O'  
+update #temp1 set pcent1=80 where grade1='E'  
+update #temp1 set pcent1=70 where grade1='A'  
+update #temp1 set pcent1=60 where grade1='B'  
+update #temp1 set pcent1=50 where grade1='C'  
+update #temp1 set pcent1=40 where grade1='D'  
+update #temp1 set pcent1=0 where grade1='F'  
+update #temp1 set pcent1=0 where grade1='I'  
+  
+set @m_see_level=0  
+  
+select @m_std_count=count(*) from #temp1  
+select @m_score_count=COUNT(*) from #temp1 where pcent1>=60  
+
+if @m_std_count<=0
+begin
+	set @m_std_count=1
+end
+  
+if (@m_score_count/@m_std_count)*100>=80  
+begin  
+ set @m_see_level=3   
+end  
+else if (@m_score_count/@m_std_count)*100>=70 and (@m_score_count/@m_std_count)*100<80  
+begin  
+ set @m_see_level=2   
+end  
+else if (@m_score_count/@m_std_count)*100>=60 and (@m_score_count/@m_std_count)*100<70  
+begin  
+ set @m_see_level=1   
+end 
+ 
+  
+  
+insert into #temp(co_name,g_60,Level_Achived)  
+select 'CO attainment through SEE',(@m_score_count/@m_std_count)*100,@m_see_level  
+  
+set @m_overall_co_attainment=(@m_cie_level*40.0)/100.0 + (@m_see_level*60.0)/100.0  
+  
+  
+insert into #temp(co_name,Level_Achived)  
+select 'Overall CO attainment in the scale of 3', @m_overall_co_attainment  
+  
+  
+/*****PO attainment calculation******/  
+insert into #temp(co_name) select 'PO attainment  as follows'  
+  
+insert into #temp_po(po_id,po_name)   
+select poco_program_outcome_nRowId,poco_program_outcome_sNo  
+from poco_program_outcome where poco_program_outcome_nPeriod=@p_period_id   
+and poco_program_outcome_nCourseId=@p_course_id   
+and poco_program_outcome_nType=1  
+order by poco_program_outcome_nRowId  
+  
+insert into #temp_po1(po_id1,scale1)   
+select poco_subject_wise_co_po_mapping_nPoId,AVG(poco_subject_wise_co_po_mapping_nScale)  
+from poco_subject_wise_co_po_mapping  
+where poco_subject_wise_co_po_mapping_nScale>0  
+and poco_subject_wise_co_po_mapping_nCollegeId=@p_branch_id  
+and poco_subject_wise_co_po_mapping_nPeriodId=@p_period_id  
+and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+group by poco_subject_wise_co_po_mapping_nPoId  
+  
+update #temp_po set scale=scale1 from #temp_po1 where po_id=po_id1  
+  
+update #temp_po set score=(scale/3.00)*@m_overall_co_attainment  
+update #temp_po set caption=po_name+':- ' + LTRIM(rtrim(str(score,7,2))) + ' / ' + LTRIM(rtrim(str(scale,7,2)))   
+  
+insert into #temp(co_name) select caption from #temp_po  
+/************************************/  
+  
+  
+select * from #temp order by sl  
+  
+END  
+  
+go
+
+   
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Batch_Subject_Wise_Syllabus_Detail_Excel]     
+(    
+@p_batch_id int,  
+@p_subject_id numeric(18,0),  
+@p_module_key varchar(20),  
+@p_module_det ntext,  
+@p_sub_module_det ntext,  
+@p_class_count varchar(10)   
+)    
+AS    
+BEGIN    
+  
+declare @m_err_no int      
+declare @m_err_mesg varchar(100)    
+declare @m_ctr int  
+declare @m_module varchar(20)  
+declare @m_sub_module varchar(20)  
+declare @m_sub_module_sl int  
+declare @m_module_id int  
+declare @m_class_count int  
+  
+set @m_err_no=0      
+set @m_err_mesg='Error'      
+  
+  
+    
+begin try      
+ begin transaction       
+      
+   
+ set @m_module= LEFT(@p_module_key,3)  
+ set @m_sub_module= substring(@p_module_key,5,3)  
+ set @m_sub_module=LTRIM(rtrim(@m_sub_module))  
+  
+ if LEN(@m_sub_module)=0  
+ begin  
+  set @m_sub_module_sl=0  
+ end  
+ else  
+ begin  
+  if ISNUMERIC(@m_sub_module)=0  
+  begin  
+   set @m_err_mesg='Wrong Sub Module Sl'      
+   set @m_ctr=1/0  
+  end   
+  set @m_sub_module_sl=CONVERT(int,@m_sub_module)  
+ end  
+  
+ select @m_module_id=poco_module_nId from poco_module where poco_module_sName=@m_module  
+ if @m_module_id is null  
+ begin  
+     set @m_err_mesg='Wrong Module'      
+  set @m_ctr=1/0  
+ end  
+   
+ if @p_class_count='-' or @p_class_count=''  
+ begin  
+  set @p_class_count='0'  
+ end  
+  
+ if ISNUMERIC(@p_class_count)=0  
+ begin  
+  set @m_class_count=0  
+ end  
+ else  
+ begin  
+  set @m_class_count=CONVERT(int,@p_class_count)  
+ end  
+  
+  
+  
+  
+ select @m_ctr=COUNT(*) from poco_subject_master_module_detail_for_batch  
+ where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id  
+ and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id  
+ and poco_subject_master_module_detail_for_batch_nModuleId=@m_module_id  
+ and poco_subject_master_module_detail_for_batch_nSubModuleSl=@m_sub_module_sl  
+  
+ if @m_ctr=0  
+ begin  
+  insert into poco_subject_master_module_detail_for_batch(  
+   poco_subject_master_module_detail_for_batch_nBatchId,  
+   poco_subject_master_module_detail_for_batch_nSubjectId,  
+   poco_subject_master_module_detail_for_batch_nModuleId,  
+   poco_subject_master_module_detail_for_batch_nSubModuleSl,  
+   poco_subject_master_module_detail_for_batch_sTopic,  
+   poco_subject_master_module_detail_for_batch_sDetails,  
+   poco_subject_master_module_detail_for_batch_nClassCount,  
+   poco_subject_master_module_detail_for_batch_nIsActive   
+  )  
+  select @p_batch_id,@p_subject_id,@m_module_id,@m_sub_module_sl,@p_module_det,@p_sub_module_det,@m_class_count,1  
+ end  
+ else  
+ begin  
+  update poco_subject_master_module_detail_for_batch set   
+  poco_subject_master_module_detail_for_batch_sTopic=@p_module_det,  
+  poco_subject_master_module_detail_for_batch_sDetails=@p_sub_module_det,  
+  poco_subject_master_module_detail_for_batch_nClassCount=@m_class_count  
+  where poco_subject_master_module_detail_for_batch_nBatchId=@p_batch_id  
+  and poco_subject_master_module_detail_for_batch_nSubjectId=@p_subject_id  
+  and poco_subject_master_module_detail_for_batch_nModuleId=@m_module_id  
+  and poco_subject_master_module_detail_for_batch_nSubModuleSl=@m_sub_module_sl  
+ end  
+  
+    
+              
+         
+  commit transaction      
+  set @m_err_mesg='Success'      
+end try      
+      
+      
+begin catch      
+ set @m_err_no=1      
+ rollback transaction       
+end catch      
+      
+      
+ select @m_err_mesg as err_mesg,@m_err_no as err_no      
+     
+      
+  
+END    
+    
+    
+go
+
+    
+CREATE PROCEDURE [dbo].[Proc_Save_Course_Outcome_Mst_Excel]     
+(    
+@p_period_id int,    
+@p_subject_id int,    
+@p_sl varchar(50),    
+@p_detail varchar(8000)    
+    
+)    
+AS    
+BEGIN    
+    
+declare @m_err_no int    
+declare @m_err_mesg varchar(100)    
+declare @m_gen_err int  
+declare @m_ctr int    
+    
+  
+    
+set @m_err_no=0    
+    
+begin try    
+ begin transaction     
+   
+ select @m_ctr=COUNT(*) from poco_subject_wise_co_master  
+  where poco_subject_wise_co_master_nPeriodId=@p_period_id    
+  and poco_subject_wise_co_master_nSubjectId=@p_subject_id    
+  and poco_subject_wise_co_master_sCoNo=@p_sl    
+  
+    
+ if(@m_ctr=0)    
+ begin    
+  insert into poco_subject_wise_co_master(    
+  poco_subject_wise_co_master_nPeriodId,    
+  poco_subject_wise_co_master_nSubjectId,    
+  poco_subject_wise_co_master_sCoNo,    
+  poco_subject_wise_co_master_sDetails    
+  )    
+  select     
+  @p_period_id,    
+  @p_subject_id,    
+  @p_sl,    
+  @p_detail      
+ end    
+ else    
+ begin    
+  update poco_subject_wise_co_master set     
+  poco_subject_wise_co_master_sCoNo=@p_sl,    
+  poco_subject_wise_co_master_sDetails=@p_detail    
+  where poco_subject_wise_co_master_nPeriodId=@p_period_id    
+  and poco_subject_wise_co_master_nSubjectId=@p_subject_id    
+  and poco_subject_wise_co_master_sCoNo=@p_sl     
+ end    
+     
+     
+    
+      
+ commit transaction    
+ set @m_err_mesg='Success'    
+end try    
+    
+    
+begin catch    
+ set @m_err_no=1    
+ rollback transaction     
+end catch    
+    
+    
+select @m_err_mesg as err_mesg,@m_err_no as err_no    
+END    
+    
+go
+
+     
+CREATE PROCEDURE [dbo].[Proc_Save_Poco_Subject_Wise_Copo_Mapping_Excel]       
+(      
+@p_college_id int,  
+@p_batch_id int,    
+@p_subject_id numeric(18,0),  
+@p_course_id int,    
+@p_co varchar(20),    
+@p_po varchar(20),     
+@p_scale varchar(10)     
+)      
+AS      
+BEGIN      
+    
+declare @m_err_no int        
+declare @m_err_mesg varchar(100)      
+declare @m_ctr int    
+declare @m_po_id numeric(18,0)    
+declare @m_co_id numeric(18,0)    
+declare @m_scale numeric(18,2)    
+    
+set @m_err_no=0        
+set @m_err_mesg='Error'        
+    
+    
+      
+begin try        
+ begin transaction         
+   
+  select @m_co_id=poco_subject_wise_co_master_nRowId from poco_subject_wise_co_master   
+  where poco_subject_wise_co_master_sCoNo=@p_co  
+  and poco_subject_wise_co_master_nSubjectId=@p_subject_id  
+    
+  select @m_po_id=poco_program_outcome_nRowId from poco_program_outcome   
+  where poco_program_outcome_sNo=@p_po and poco_program_outcome_nCourseId=@p_course_id  
+  and poco_program_outcome_nType=1  
+    
+if @m_co_id is null    
+begin    
+ set @m_err_mesg='Wrong Co'        
+ set @m_ctr=1/0    
+end   
+  
+if @m_po_id is null    
+begin    
+ set @m_err_mesg='Wrong Po'        
+ set @m_ctr=1/0    
+end   
+  
+if @p_scale='-' or @p_scale=''  
+begin  
+ set @p_scale='0'  
+end  
+  
+if ISNUMERIC(@p_scale)=0    
+begin    
+ set @m_scale=0  
+end    
+else  
+begin  
+ set @m_scale=CONVERT(numeric(18,2),@p_scale)  
+end   
+  
+   
+    
+ select @m_ctr=COUNT(*) from poco_subject_wise_co_po_mapping    
+ where poco_subject_wise_co_po_mapping_nCollegeId=@p_college_id  
+ and poco_subject_wise_co_po_mapping_nPeriodId=@p_batch_id    
+ and poco_subject_wise_co_po_mapping_nSubjectId=@p_subject_id    
+ and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+ and poco_subject_wise_co_po_mapping_nCoId=@m_co_id  
+ and poco_subject_wise_co_po_mapping_nPoId=@m_po_id  
+    
+ if @m_ctr=0    
+ begin    
+ insert into poco_subject_wise_co_po_mapping(    
+ poco_subject_wise_co_po_mapping_nCollegeId,  
+ poco_subject_wise_co_po_mapping_nPeriodId,  
+ poco_subject_wise_co_po_mapping_nCourseId,  
+ poco_subject_wise_co_po_mapping_nSubjectId,  
+ poco_subject_wise_co_po_mapping_nCoId,  
+ poco_subject_wise_co_po_mapping_nPoId,  
+ poco_subject_wise_co_po_mapping_nScale    
+ )    
+ select   
+ @p_college_id,  
+ @p_batch_id,  
+ @p_course_id,  
+ @p_subject_id,  
+ @m_co_id,  
+ @m_po_id,  
+ @m_scale    
+ end    
+ else    
+ begin    
+ update poco_subject_wise_co_po_mapping set     
+ poco_subject_wise_co_po_mapping_nScale=@m_scale  
+ where poco_subject_wise_co_po_mapping_nCollegeId=@p_college_id  
+ and poco_subject_wise_co_po_mapping_nPeriodId=@p_batch_id    
+ and poco_subject_wise_co_po_mapping_nSubjectId=@p_subject_id    
+ and poco_subject_wise_co_po_mapping_nCourseId=@p_course_id  
+ and poco_subject_wise_co_po_mapping_nCoId=@m_co_id  
+ and poco_subject_wise_co_po_mapping_nPoId=@m_po_id  
+ end    
+    
+      
+                
+           
+  commit transaction        
+  set @m_err_mesg='Success'        
+end try        
+        
+        
+begin catch        
+ set @m_err_no=1        
+ rollback transaction         
+end catch        
+        
+        
+ select @m_err_mesg as err_mesg,@m_err_no as err_no        
+       
+        
+    
+END      
+      
+go
+
+
+  
+  
+create PROC [dbo].[Proc_Get_Attendence_percentage_For_Faculty]      
+(    
+ @P_SESSION_ID int,
+ @p_COLLEGE_ID INT,            
+ @P_FACULTY_CODE VARCHAR(50), 
+ @P_SEM_TYPE varchar(1)='O'  
+)      
+AS      
+      
+BEGIN      
+DECLARE @TOTAL_CLASSES numeric(18,0)      
+DECLARE @ATTENDED numeric(18,0)           
+DECLARE @PCENT numeric(18,0)           
+DECLARE  @P_FROM_DT DATETIME    
+DECLARE  @P_TO_DT DATETIME 
+
+select @P_FROM_DT=academic_session_fromdate,@P_TO_DT=academic_session_todate
+from Jis_Main_User_Db.dbo.academic_session where academic_session_id=@P_SESSION_ID
+
+   
+ 
+     
+      
+/*update total class*/      
+select @TOTAL_CLASSES=COUNT(*)      
+from TIME_TABLE_DATEWISE_FACULTY      
+where TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@p_COLLEGE_ID    
+AND TIME_TABLE_DATEWISE_FACULTY_dDate>=@P_FROM_DT      
+and TIME_TABLE_DATEWISE_FACULTY_dDate<=@P_TO_DT      
+and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode=@P_FACULTY_CODE      
+and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1    
+and TIME_TABLE_DATEWISE_FACULTY_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType=@P_SEM_TYPE
+)
+   
+      
+select @ATTENDED=COUNT(*)     
+from Attendence_Faculty_Detail      
+where attendence_faculty_detail_dDate>=@P_FROM_DT      
+and attendence_faculty_detail_dDate<=@P_TO_DT      
+and Attendence_Faculty_Detail_nFacultyCode=@P_FACULTY_CODE    
+and attendence_faculty_detail_nIsActive=1     
+and attendence_faculty_detail_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType=@P_SEM_TYPE
+)
+  
+
+set @PCENT=0
+if @TOTAL_CLASSES>0
+begin
+	set @PCENT=(@ATTENDED/@TOTAL_CLASSES) * 100
+end
+
+select @TOTAL_CLASSES,@ATTENDED,@PCENT
+      
+END      
+  
+go
+
+ 
+create PROC [dbo].[Proc_Get_Attendence_percentage_For_Student]    
+(    
+ @P_SESSION_ID int,
+ @p_COLLEGE_ID INT,            
+ @P_STUDENT_CODE VARCHAR(50), 
+ @P_SEM_TYPE varchar(1)='O'  
+)    
+AS    
+BEGIN    
+    
+  
+    
+CREATE TABLE #TEMP1    
+(    
+date1 datetime,  
+batch1 int,  
+CourseId1 int,  
+StreamId1 int,  
+SectionId1 int,  
+SemesterId1 int,  
+SubjectId1 numeric(18,0),  
+GroupId1 int,  
+ctr1 int default 0,  
+is_app int default 0,  
+present1  int default 0,  
+absent1  int default 0  
+)    
+  
+CREATE TABLE #TEMP2    
+(    
+date2 datetime,  
+batch2 int,  
+CourseId2 int,  
+StreamId2 int,  
+SectionId2 int,  
+SemesterId2 int,  
+SubjectId2 numeric(28,0),  
+GroupId2 int,  
+ctr2 int default 0,  
+present2  int default 0,  
+absent2  int default 0  
+)    
+  
+
+   
+  
+    
+     
+    
+declare @m_student_id numeric(18,0)  
+declare @m_routine_year int  
+declare @m_routine_sem_id int  
+declare @m_course_id int  
+declare @m_stream_id int  
+declare @m_sec_id int  
+declare @m_sem_no int  
+declare @m_current_date datetime  
+declare @m_period int  
+declare @P_FROM_DATE datetime  
+declare @P_TO_DATE datetime  
+  
+DECLARE @TOTAL_CLASSES numeric(18,0)      
+DECLARE @ATTENDED numeric(18,0)           
+DECLARE @PCENT numeric(18,0)  
+  
+
+select @P_FROM_DATE=academic_session_fromdate,@P_TO_DATE=academic_session_todate
+from Jis_Main_User_Db.dbo.academic_session where academic_session_id=@P_SESSION_ID
+
+  
+   
+  
+  
+select @m_student_id=STD_STUDENT_MASTER_nStudentId,  
+@m_routine_year=STD_STUDENT_MASTER_sRoutineBatchYr,  
+@m_routine_sem_id=STD_STUDENT_MASTER_sRoutineSemId,  
+@m_course_id=STD_STUDENT_BATCH_nCourseId,  
+@m_stream_id=STD_STUDENT_BATCH_nStreamMainId  
+from STD_STUDENT_MASTER_VIEW where STD_STUDENT_MASTER_sStudentRoll=@P_STUDENT_CODE  
+  
+  
+select @m_sem_no=STD_SEMESTER_nSemNo from STD_SEMESTER where STD_SEMESTER_nSemesterId=@m_routine_sem_id  
+  
+select @m_sec_id=Semester_Student_Relation_nSection from Semester_Student_Relation  
+where Semester_Student_Relation_nStudentId=@m_student_id  
+and Semester_Student_Relation_nSemesterId=@m_routine_sem_id  
+and Semester_Student_Relation_nBatch=@m_routine_year  
+and Semester_Student_Relation_nCourseId=@m_course_id  
+and Semester_Student_Relation_nStreamID=@m_stream_id  
+  
+  
+insert into #TEMP1(  
+date1,batch1,CourseId1,StreamId1,SectionId1,SemesterId1,SubjectId1,GroupId1,ctr1  
+)  
+select   
+TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,  
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,  
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId,COUNT(*)  
+from TIME_TABLE_DATEWISE  
+where TIME_TABLE_DATEWISE_nCollegeId=@P_COLLEGE_ID  
+and TIME_TABLE_DATEWISE_dDate>=@P_FROM_DATE  
+and TIME_TABLE_DATEWISE_dDate<=@P_TO_DATE  
+and TIME_TABLE_DATEWISE_nCourseId=@m_course_id  
+and TIME_TABLE_DATEWISE_nStreamId=@m_stream_id  
+and TIME_TABLE_DATEWISE_nSectionId=@m_sec_id  
+and TIME_TABLE_DATEWISE_nIsActive=1  
+and TIME_TABLE_DATEWISE_nBatch=@m_routine_year  
+and TIME_TABLE_DATEWISE_nSemesterId=@m_routine_sem_id  
+group by TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,  
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,  
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId  
+  
+  
+update #TEMP1 set is_app=1 from Semester_Section_Group_Student_Relation   
+where Semester_Section_Group_Student_Relation_nStudentId=@m_student_id  
+and Semester_Section_Group_Student_Relation_nSemesterId=@m_routine_sem_id  
+and Semester_Section_Group_Student_Relation_nBatch=@m_routine_year  
+and Semester_Section_Group_Student_Relation_nCourseId=@m_course_id  
+and Semester_Section_Group_Student_Relation_nStreamID=@m_stream_id  
+and Semester_Section_Group_Student_Relation_nSection=@m_sec_id  
+and Semester_Section_Group_Student_Relation_nGroupId=GroupId1  
+and Semester_Section_Group_Student_Relation_nSubjectId=SubjectId1  
+  
+  
+  
+insert into #TEMP2(  
+date2,batch2,CourseId2,StreamId2,SectionId2,SemesterId2,SubjectId2,GroupId2,ctr2,present2  
+)  
+select   
+attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,  
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,  
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId,COUNT(*),SUM(Attendence_Student_Detail_nIsPresent)  
+from attendence_student_detail  
+where attendence_student_detail_nCollegeId=@P_COLLEGE_ID  
+and attendence_student_detail_dDate>=@P_FROM_DATE  
+and attendence_student_detail_dDate<=@P_TO_DATE  
+and attendence_student_detail_nCourseId=@m_course_id  
+and attendence_student_detail_nStreamId=@m_stream_id  
+and attendence_student_detail_nSectionId=@m_sec_id  
+and attendence_student_detail_nIsActive=1  
+and attendence_student_detail_nBatchId=@m_routine_year  
+and attendence_student_detail_nSemesterId=@m_routine_sem_id  
+and Attendence_Student_Detail_nStudentId=@m_student_id  
+group by attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,  
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,  
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId  
+  
+update #TEMP2 set absent2=ctr2-present2  
+  
+update #TEMP1 set present1=present2,absent1=absent2 from #TEMP2  
+where date1=date2  
+and batch1=batch2  
+and CourseId1=CourseId2  
+and StreamId1=StreamId2  
+and SectionId1=SectionId2  
+and SemesterId1=SemesterId2  
+and SubjectId1=SubjectId2  
+and GroupId1=GroupId2  
+  
+delete #TEMP1 where is_app=0  
+  
+ 
+  
+select @TOTAL_CLASSES=SUM(ctr1),@ATTENDED=SUM(present1) 
+from #TEMP1
+
+if @TOTAL_CLASSES is null
+begin
+	set @TOTAL_CLASSES=0
+end
+
+if @ATTENDED is null
+begin
+	set @ATTENDED=0
+end
+
+set @PCENT=0
+if @TOTAL_CLASSES>0
+begin
+	set @PCENT=(@ATTENDED/@TOTAL_CLASSES) * 100
+end
+
+select @TOTAL_CLASSES,@ATTENDED,@PCENT 
+    
+    
+END    
+    
+    
+go
+
+
+  
+  
+  
+ALTER PROC [dbo].[Proc_Get_Attendence_percentage_For_Faculty]      
+(    
+ @P_SESSION_ID int,
+ @p_COLLEGE_ID INT,            
+ @P_FACULTY_CODE VARCHAR(50), 
+ @P_SEM_TYPE varchar(1)='O'  
+)      
+AS      
+      
+BEGIN      
+DECLARE @TOTAL_CLASSES numeric(18,0)      
+DECLARE @ATTENDED numeric(18,0)           
+DECLARE @PCENT numeric(18,0)           
+DECLARE  @P_FROM_DT DATETIME    
+DECLARE  @P_TO_DT DATETIME 
+
+select @P_FROM_DT=academic_session_fromdate,@P_TO_DT=academic_session_todate
+from Jis_Main_User_Db.dbo.academic_session where academic_session_id=@P_SESSION_ID
+
+   
+ 
+     
+      
+/*update total class*/      
+select @TOTAL_CLASSES=COUNT(*)      
+from TIME_TABLE_DATEWISE_FACULTY      
+where TIME_TABLE_DATEWISE_FACULTY_nCollegeId=@p_COLLEGE_ID    
+AND TIME_TABLE_DATEWISE_FACULTY_dDate>=@P_FROM_DT      
+and TIME_TABLE_DATEWISE_FACULTY_dDate<=@P_TO_DT      
+and TIME_TABLE_DATEWISE_FACULTY_nFacultyCode=@P_FACULTY_CODE      
+and TIME_TABLE_DATEWISE_FACULTY_nIsActive=1    
+and TIME_TABLE_DATEWISE_FACULTY_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType=@P_SEM_TYPE
+)
+   
+      
+select @ATTENDED=COUNT(*)     
+from Attendence_Faculty_Detail      
+where attendence_faculty_detail_dDate>=@P_FROM_DT      
+and attendence_faculty_detail_dDate<=@P_TO_DT      
+and Attendence_Faculty_Detail_nFacultyCode=@P_FACULTY_CODE    
+and attendence_faculty_detail_nIsActive=1     
+and attendence_faculty_detail_nSemesterId in(
+select STD_SEMESTER_nSemesterId from STD_SEMESTER where STD_SEMESTER_sType=@P_SEM_TYPE
+)
+  
+
+set @PCENT=0
+if @TOTAL_CLASSES>0
+begin
+	set @PCENT=(@ATTENDED/@TOTAL_CLASSES) * 100
+end
+
+select @TOTAL_CLASSES as total_class,@ATTENDED as attd,@PCENT as pcent
+      
+END      
+  
+  go
+
+
+ALTER PROC [dbo].[Proc_Get_Attendence_percentage_For_Student]    
+(    
+ @P_SESSION_ID int,
+ @p_COLLEGE_ID INT,            
+ @P_STUDENT_CODE VARCHAR(50), 
+ @P_SEM_TYPE varchar(1)='O'  
+)    
+AS    
+BEGIN    
+    
+  
+    
+CREATE TABLE #TEMP1    
+(    
+date1 datetime,  
+batch1 int,  
+CourseId1 int,  
+StreamId1 int,  
+SectionId1 int,  
+SemesterId1 int,  
+SubjectId1 numeric(18,0),  
+GroupId1 int,  
+ctr1 int default 0,  
+is_app int default 0,  
+present1  int default 0,  
+absent1  int default 0  
+)    
+  
+CREATE TABLE #TEMP2    
+(    
+date2 datetime,  
+batch2 int,  
+CourseId2 int,  
+StreamId2 int,  
+SectionId2 int,  
+SemesterId2 int,  
+SubjectId2 numeric(28,0),  
+GroupId2 int,  
+ctr2 int default 0,  
+present2  int default 0,  
+absent2  int default 0  
+)    
+  
+
+   
+  
+    
+     
+    
+declare @m_student_id numeric(18,0)  
+declare @m_routine_year int  
+declare @m_routine_sem_id int  
+declare @m_course_id int  
+declare @m_stream_id int  
+declare @m_sec_id int  
+declare @m_sem_no int  
+declare @m_current_date datetime  
+declare @m_period int  
+declare @P_FROM_DATE datetime  
+declare @P_TO_DATE datetime  
+  
+DECLARE @TOTAL_CLASSES numeric(18,0)      
+DECLARE @ATTENDED numeric(18,0)           
+DECLARE @PCENT numeric(18,0)  
+  
+
+select @P_FROM_DATE=academic_session_fromdate,@P_TO_DATE=academic_session_todate
+from Jis_Main_User_Db.dbo.academic_session where academic_session_id=@P_SESSION_ID
+
+  
+   
+  
+  
+select @m_student_id=STD_STUDENT_MASTER_nStudentId,  
+@m_routine_year=STD_STUDENT_MASTER_sRoutineBatchYr,  
+@m_routine_sem_id=STD_STUDENT_MASTER_sRoutineSemId,  
+@m_course_id=STD_STUDENT_BATCH_nCourseId,  
+@m_stream_id=STD_STUDENT_BATCH_nStreamMainId  
+from STD_STUDENT_MASTER_VIEW where STD_STUDENT_MASTER_sStudentRoll=@P_STUDENT_CODE  
+  
+  
+select @m_sem_no=STD_SEMESTER_nSemNo from STD_SEMESTER where STD_SEMESTER_nSemesterId=@m_routine_sem_id  
+  
+select @m_sec_id=Semester_Student_Relation_nSection from Semester_Student_Relation  
+where Semester_Student_Relation_nStudentId=@m_student_id  
+and Semester_Student_Relation_nSemesterId=@m_routine_sem_id  
+and Semester_Student_Relation_nBatch=@m_routine_year  
+and Semester_Student_Relation_nCourseId=@m_course_id  
+and Semester_Student_Relation_nStreamID=@m_stream_id  
+  
+  
+insert into #TEMP1(  
+date1,batch1,CourseId1,StreamId1,SectionId1,SemesterId1,SubjectId1,GroupId1,ctr1  
+)  
+select   
+TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,  
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,  
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId,COUNT(*)  
+from TIME_TABLE_DATEWISE  
+where TIME_TABLE_DATEWISE_nCollegeId=@P_COLLEGE_ID  
+and TIME_TABLE_DATEWISE_dDate>=@P_FROM_DATE  
+and TIME_TABLE_DATEWISE_dDate<=@P_TO_DATE  
+and TIME_TABLE_DATEWISE_nCourseId=@m_course_id  
+and TIME_TABLE_DATEWISE_nStreamId=@m_stream_id  
+and TIME_TABLE_DATEWISE_nSectionId=@m_sec_id  
+and TIME_TABLE_DATEWISE_nIsActive=1  
+and TIME_TABLE_DATEWISE_nBatch=@m_routine_year  
+and TIME_TABLE_DATEWISE_nSemesterId=@m_routine_sem_id  
+group by TIME_TABLE_DATEWISE_dDate,TIME_TABLE_DATEWISE_nBatch,TIME_TABLE_DATEWISE_nCourseId,  
+TIME_TABLE_DATEWISE_nStreamId,TIME_TABLE_DATEWISE_nSectionId,TIME_TABLE_DATEWISE_nSemesterId,  
+TIME_TABLE_DATEWISE_nSubjectId,TIME_TABLE_DATEWISE_nGroupId  
+  
+  
+update #TEMP1 set is_app=1 from Semester_Section_Group_Student_Relation   
+where Semester_Section_Group_Student_Relation_nStudentId=@m_student_id  
+and Semester_Section_Group_Student_Relation_nSemesterId=@m_routine_sem_id  
+and Semester_Section_Group_Student_Relation_nBatch=@m_routine_year  
+and Semester_Section_Group_Student_Relation_nCourseId=@m_course_id  
+and Semester_Section_Group_Student_Relation_nStreamID=@m_stream_id  
+and Semester_Section_Group_Student_Relation_nSection=@m_sec_id  
+and Semester_Section_Group_Student_Relation_nGroupId=GroupId1  
+and Semester_Section_Group_Student_Relation_nSubjectId=SubjectId1  
+  
+  
+  
+insert into #TEMP2(  
+date2,batch2,CourseId2,StreamId2,SectionId2,SemesterId2,SubjectId2,GroupId2,ctr2,present2  
+)  
+select   
+attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,  
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,  
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId,COUNT(*),SUM(Attendence_Student_Detail_nIsPresent)  
+from attendence_student_detail  
+where attendence_student_detail_nCollegeId=@P_COLLEGE_ID  
+and attendence_student_detail_dDate>=@P_FROM_DATE  
+and attendence_student_detail_dDate<=@P_TO_DATE  
+and attendence_student_detail_nCourseId=@m_course_id  
+and attendence_student_detail_nStreamId=@m_stream_id  
+and attendence_student_detail_nSectionId=@m_sec_id  
+and attendence_student_detail_nIsActive=1  
+and attendence_student_detail_nBatchId=@m_routine_year  
+and attendence_student_detail_nSemesterId=@m_routine_sem_id  
+and Attendence_Student_Detail_nStudentId=@m_student_id  
+group by attendence_student_detail_dDate,attendence_student_detail_nBatchId,attendence_student_detail_nCourseId,  
+attendence_student_detail_nStreamId,attendence_student_detail_nSectionId,attendence_student_detail_nSemesterId,  
+attendence_student_detail_nSubjectId,attendence_student_detail_nGroupId  
+  
+update #TEMP2 set absent2=ctr2-present2  
+  
+update #TEMP1 set present1=present2,absent1=absent2 from #TEMP2  
+where date1=date2  
+and batch1=batch2  
+and CourseId1=CourseId2  
+and StreamId1=StreamId2  
+and SectionId1=SectionId2  
+and SemesterId1=SemesterId2  
+and SubjectId1=SubjectId2  
+and GroupId1=GroupId2  
+  
+delete #TEMP1 where is_app=0  
+  
+ 
+  
+select @TOTAL_CLASSES=SUM(ctr1),@ATTENDED=SUM(present1) 
+from #TEMP1
+
+if @TOTAL_CLASSES is null
+begin
+	set @TOTAL_CLASSES=0
+end
+
+if @ATTENDED is null
+begin
+	set @ATTENDED=0
+end
+
+set @PCENT=0
+if @TOTAL_CLASSES>0
+begin
+	set @PCENT=(@ATTENDED/@TOTAL_CLASSES) * 100
+end
+
+select @TOTAL_CLASSES as total_class,@ATTENDED as attd,@PCENT as pcent
+
+    
+    
+END    
+    
+    
+go
+
+
+  
+
+              
+             
+             

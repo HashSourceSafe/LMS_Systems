@@ -1,0 +1,70 @@
+
+STD_STREAM_WISE_SUBJECT_VIEW
+STD_STUDENT_MASTER_SECTION_WISE_VIEW
+
+Proc_Get_BatchCourseSemStream_Wise_Subject
+Proc_Get_BatchCourseSemStreamSection_Wise_Student -> Student list
+Proc_Copy_BatchCourseSemStreamSection_Wise_Student
+Proc_Get_Subject_Group_Wise_Student
+
+Proc_Save_GroupAllotment
+Proc_Save_GroupAllotmentDet
+
+Semester_Section_Group_Student_Relation
+=============================================
+
+
+
+
+/****** Object:  Table [dbo].[Semester_Section_Group_Student_Relation]    Script Date: 12/25/2017 07:45:59 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Semester_Section_Group_Student_Relation](
+	[Semester_Section_Group_Student_Relation_nStudentId] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nSemesterId] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nBatch] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nCourseId] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nStreamID] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nSection] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nGroupId] [int] NOT NULL,
+	[Semester_Section_Group_Student_Relation_nSubjectId] [int] NOT NULL,
+ CONSTRAINT [PK_Semester_Section_Group_Student_Relation] PRIMARY KEY CLUSTERED 
+(
+	[Semester_Section_Group_Student_Relation_nStudentId] ASC,
+	[Semester_Section_Group_Student_Relation_nSemesterId] ASC,
+	[Semester_Section_Group_Student_Relation_nBatch] ASC,
+	[Semester_Section_Group_Student_Relation_nCourseId] ASC,
+	[Semester_Section_Group_Student_Relation_nStreamID] ASC,
+	[Semester_Section_Group_Student_Relation_nSection] ASC,
+	[Semester_Section_Group_Student_Relation_nGroupId] ASC,
+	[Semester_Section_Group_Student_Relation_nSubjectId] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nStudentId]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nStudentId]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nSemesterId]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nSemesterId]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nBatch]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nBatch]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nCourseId]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nCourseId]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nStreamID]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nStreamID]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nSection]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nSection]
+GO
+
+ALTER TABLE [dbo].[Semester_Section_Group_Student_Relation] ADD  CONSTRAINT [DF_Semester_Section_Group_Student_Relation_Semester_Student_Relation_nGroupId]  DEFAULT (0) FOR [Semester_Section_Group_Student_Relation_nGroupId]
+GO
+

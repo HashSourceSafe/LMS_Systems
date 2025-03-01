@@ -1,0 +1,26 @@
+frmSubjectMaster.aspx
+=====================
+STD_SUBJECT_MASTER_NEW
+
+
+Proc_Get_stf_Course
+Proc_Get_Subject_details -->Change
+Proc_Save_Subject_master -->Change
+Proc_Save_Subject_Master_Main -->Change
+
+
+
+alter table STD_SUBJECT_MASTER_NEW add
+STD_SUBJECT_sSUBJECT_IS_ACTIVE int default 1,
+STD_SUBJECT_sSUBJECT_COURSEID int default 0
+
+-----------------------------------------------------------
+
+alter table STD_SUBJECT_MASTER_NEW add 
+STD_SUBJECT_SUBJECT_nStreamId int default 0,
+STD_SUBJECT_SUBJECT_nSemNo int default 0
+go
+
+update STD_SUBJECT_MASTER_NEW set STD_SUBJECT_SUBJECT_nStreamId=0 where STD_SUBJECT_SUBJECT_nStreamId is null
+update STD_SUBJECT_MASTER_NEW set STD_SUBJECT_SUBJECT_nSemNo=0 where STD_SUBJECT_SUBJECT_nSemNo is null
+

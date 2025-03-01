@@ -1,0 +1,9 @@
+
+    .table-col-fixed {
+  position: -webkit-sticky;
+  position: sticky;
+z-index: 1; background:#fff; border-left:1px solid #333;
+}
+ .table-col-fixed.fast{ left:0px;z-index: 9; border:1px solid #333;}
+  .table-col-fixed.secend{ left:125px;z-index: 9; border:1px solid #333;}
+   .table-col-fixed.third{ left:250px;z-index: 9;  border:1px solid #333;}

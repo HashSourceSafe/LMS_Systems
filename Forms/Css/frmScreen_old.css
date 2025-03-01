@@ -1,0 +1,310 @@
+BODY 
+{
+    background-color :  #9DCDFE;
+    /*background-image: url(images/Pattern1.gif);*/
+    background-repeat: repeat-y; 
+    font-family : Calibri, Verdana, Geneva, Arial, Helvetica, sans-serif;
+    color :  #00009C;
+    margin: 2px;
+    border-width:15px;
+    border-color:Green;
+}
+      
+
+/*textbox properties*/
+.menu_class {
+	font:15px Calibri;
+	/*border-radius:4px;*/
+}      
+      
+
+/*textbox properties*/
+.text_box {
+	background-color : white;
+	border: 1px solid #008000;
+	font:12px Calibri;
+	margin-top:5px;
+	border-radius:4px;
+}      
+
+.text_box_number {
+	background-color : white;
+	border: 1px solid #008000;
+	text-align:right;
+	font:12px Calibri;
+	margin-top:5px;
+	border-radius:4px;
+}      
+
+/*GridView properties*/
+.gridview {
+	background-color : #9DCDFE;
+	font:12px Calibri;
+	margin: 5px 0 10px 0;  
+	border: solid 1px #525252;
+	border-collapse:collapse; 
+	color: #800000;
+}      
+
+
+/*date properties*/
+.date_box {
+	background-color : #FFFCCC;
+	border: 1px solid #963939;
+	font:12px Calibri;
+	margin-top:5px;
+	border-radius:4px;
+}      
+
+
+/*Label properties*/
+.text_label_right {
+	font:12px Calibri;
+	text-align:right;
+	margin-top:7px;
+}      
+
+/*Label properties*/
+.text_label_left {
+	font:12px Calibri;
+	margin-top:7px;
+	text-align:left;
+}      
+
+/*Label properties*/
+.text_label_center {
+	font:12px Calibri;
+	margin-top:7px;
+	text-align:center;
+}      
+
+
+/* Table propeties */
+.table_color_1
+{
+	background-color: Aqua;
+	table-layout:fixed;
+}
+
+/* Table propeties */
+.table_color_2
+{
+	background-color:Teal;
+	table-layout:fixed;
+	/*border-width:2px;
+	border-color:Blue;
+	border-style: solid;*/
+}
+
+/* Table propeties */
+.table_color_3
+{
+	background-color:#39C0CF ;
+	table-layout:fixed;
+	/*border-width:2px;
+	border-color:Blue;
+	border-style: solid;*/
+}
+
+
+/* Right alignment 5px*/
+.right_align_5 
+{
+	text-align:right;
+	padding-right:5px;
+}
+
+/* Right alignment 5px*/
+.left_align_5 
+{
+	text-align:left;
+	padding-left:5px;
+}
+
+/* Right alignment 5px*/
+.center_align_5 
+{
+	text-align:center;
+}
+
+
+/*dropdown properties*/
+.dropdown_box {
+	background-color : white;
+	border: 1px solid #008000;
+	table-layout:fixed;
+	font:12px Calibri;
+	/*margin-top:5px;*/
+	border-radius:4px;
+}      
+
+.cmd_button
+{
+	margin:2 auto; 
+	padding:5; 
+	float:none;
+	padding:3px 0px; 
+	width:90%;
+	margin-top:5px;
+	font:Calibri;
+	background-color:#6495ED;
+	border-radius:4px;
+	border:none;
+}
+
+.cmd_button_search
+{
+	margin:2 auto; 
+	padding:5; 
+	float:none;
+	padding:0px 0px; 
+	width:90%;
+	margin-top:5px;
+	background-color:#6495ED;
+	font:Calibri;
+	border-radius:4px;
+	border:none;
+}
+
+.tab_selected
+{
+	margin:2 auto; 
+	padding:5; 
+	float:none;
+	padding:0px 0px; 
+
+	font-family:Calibri;
+	font-size:12px;	
+	color:Maroon;
+	background-color:Yellow;
+	margin-top:5px;
+	border-radius:4px;
+	border:none;
+	
+}
+
+.tab_un_selected
+{
+	margin:2 auto; 
+	padding:5; 
+	float:none;
+	padding:0px 0px; 
+
+	font-family:Calibri;
+	font-size:12px;	
+	color:Maroon;
+	background-color:White;
+	margin-top:5px;
+	border-radius:4px;
+	border:none;
+	
+}
+
+.panel_color
+{
+	color:#9F3333;
+	background-color:#9DCDFE;
+}
+
+
+.div_border_default
+{
+	/*border:1px solid red;*/
+	background-color:#9DCDFE;
+}
+
+
+
+.div_root_block
+{
+	background-color:#9DCDFE;
+	width:100%;
+}
+
+
+.div_label_block
+{
+	float:left; 
+	position:relative;
+	height:30px;
+	background-color:#9DCDFE;
+	line-height:30px;
+	vertical-align:middle;
+}
+
+.div_mesg_block
+{
+	/*float:left; */
+	position:relative;
+	background-color:#9DCDFE;
+	line-height:20px;
+	/*vertical-align:middle;*/
+	/*height:100%;*/
+}
+
+
+.div_textbox_block
+{
+	float:left; 
+	position:relative;
+	height:30px;
+	background-color:#9DCDFE;
+	line-height:30px;
+	vertical-align:middle;
+}
+
+
+
+.div_button_block
+{
+	float:left; 
+	position:relative;
+	height:30px;
+	background-color:#9DCDFE;
+	line-height:30px;
+	vertical-align:top;
+}
+
+
+.div_dropdown_block
+{
+	float:left; 
+	position:relative;
+	height:30px;
+	background-color:#9DCDFE;
+	line-height:30px;
+	vertical-align:middle;
+}
+
+.div_end_block
+{
+	float:none; 
+	position:relative;
+	height:30px;
+	background-color:#9DCDFE;
+	line-height:30px;
+	vertical-align:middle;
+}
+
+.div_line_block
+{
+	float:none; 
+	position:relative;
+	height:30px;
+	background-color:aqua;
+}
+
+.div_line_block_form
+{
+	float:none; 
+	position:relative;
+	background-color:aqua;
+}
+
+.div_seperation_block
+{
+	float:none; 
+	position:relative;
+	height:10px;
+	background-color:#9DCDFE;
+}

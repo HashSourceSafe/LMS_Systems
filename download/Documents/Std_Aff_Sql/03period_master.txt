@@ -1,0 +1,23 @@
+frmPeriodMaster.aspx
+====================
+
+Proc_Get_stf_BatchYear
+Proc_STF_Get_Stream
+Proc_batch_stream_wise_period
+Proc_Get_Batch_Stream_Wise_Period_List
+Proc_Save_Batch_Course_Stream_Sem_Wise_Period
+Proc_Save_Batch_Course_Stream_Sem_Wise_Period_Det
+
+PERIOD_MASTER 
+PERIOD_MASTER_TIME_TABLE
+
+
+
+
+alter table PERIOD_MASTER add
+PERIOD_MASTER_sStream varchar(100) default '',
+PERIOD_MASTER_sDispOrder int default 0
+
+
+alter table PERIOD_MASTER_TIME_TABLE add
+PERIOD_MASTER_TIME_TABLE_nSemNo int default 0

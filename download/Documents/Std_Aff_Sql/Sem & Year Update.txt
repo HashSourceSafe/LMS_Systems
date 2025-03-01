@@ -1,0 +1,85 @@
+
+select * from STD_STUDENT_BATCH where STD_STUDENT_BATCH_nCourseId=2
+and STD_STUDENT_BATCH_nBatchYear>=2014 and STD_STUDENT_BATCH_nWingId=1
+
+
+update STD_STUDENT_BATCH set STD_STUDENT_BATCH_nWingId=2 where STD_STUDENT_BATCH_nBatchId=422
+
+Proc_Update_Routine_Semester  4,0,2,2,2017,4,2016
+
+select 
+STD_STUDENT_MASTER_sStudentRoll,
+STD_STUDENT_MASTER_sUniversity_Roll_No,
+STD_STUDENT_MASTER_sCollegeRoll,
+STD_STUDENT_MASTER_sUniversity_Regd_No
+from STD_STUDENT_MASTER_VIEW
+where STD_STUDENT_BATCH_nBatchYear>=2014
+order by STD_STUDENT_MASTER_sCollegeRoll
+
+
+select 
+STD_STUDENT_MASTER_sStudentRoll,
+STD_STUDENT_MASTER_sRoutineSemId,
+STD_STUDENT_MASTER_nCurrSemesterId,
+STD_STUDENT_MASTER_sRoutineBatchYr
+from STD_STUDENT_MASTER_VIEW
+where STD_STUDENT_BATCH_nBatchYear=2015
+and STD_STUDENT_BATCH_nWingId=2
+and STD_STUDENT_BATCH_nCourseId=2
+and STD_STUDENT_MASTER_sRoutineSemId<>STD_STUDENT_MASTER_nCurrSemesterId
+
+
+update STD_STUDENT_MASTER_VIEW set STD_STUDENT_MASTER_sUniversity_Roll_No=JISCE_Admission_Roll_No,
+STD_STUDENT_MASTER_sCollegeRoll=JISCE_Admission_Roll_No,
+STD_STUDENT_MASTER_sUniversity_Regd_No=JISCE_Admission_Wbut_Reg_No
+from jisce_exam_form_fillup_db.dbo.jisce_admission_data 
+where STD_STUDENT_MASTER_sStudentRoll=JISCE_Admission_sSttudentCode
+and STD_STUDENT_BATCH_nBatchYear>=2014
+
+update STD_STUDENT_MASTER_VIEW set 
+STD_STUDENT_MASTER_sCollegeRoll=roll
+from Table_1
+where STD_STUDENT_MASTER_sStudentRoll=code
+
+
+select * from STD_STUDENT_MASTER 
+where STD_STUDENT_MASTER_sStudentName like 'DEBI SEN'
+
+select STD_STUDENT_MASTER_sStudentRoll,STD_STUDENT_MASTER_sStudentName,
+STD_STUDENT_MASTER_sUniversity_Roll_No,
+STD_STUDENT_MASTER_sCollegeRoll,
+STD_STUDENT_MASTER_sUniversity_Regd_No
+from STD_STUDENT_MASTER where STD_STUDENT_MASTER_nStudentId in( 
+607599)
+-------------------------------
+
+select 
+STD_STUDENT_MASTER_sStudentRoll,
+STD_STUDENT_MASTER_sRoutineSemId,
+STD_STUDENT_MASTER_nCurrSemesterId,
+STD_STUDENT_MASTER_sRoutineBatchYr
+from STD_STUDENT_MASTER_VIEW
+where STD_STUDENT_MASTER_nStudentId in( 
+STD_STUDENT_MASTER_sCollegeRoll='10614153'
+)
+
+
+update  STD_STUDENT_MASTER_VIEW set 
+STD_STUDENT_MASTER_sRoutineSemId=8,
+STD_STUDENT_MASTER_sRoutineBatchYr=2014
+from STD_STUDENT_MASTER_VIEW
+where STD_STUDENT_MASTER_nStudentId in( 
+311492,311002,310852)
+
+
+select * from STD_SEMESTER
+312381,312051,311715,312260,311830,312378,311717
+
+
+select * from Semester_Student_Relation
+where Semester_Student_Relation_nStudentId in(
+312381,312051,311715,312260,311830,312378,311717)
+
+select * from Semester_Section_Group_Student_Relation
+where Semester_Section_Group_Student_Relation_nStudentId in(
+312381,312051,311715,312260,311830,312378,311717)

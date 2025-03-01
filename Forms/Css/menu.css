@@ -1,0 +1,32 @@
+*{ margin:0 auto;padding:0;}
+img{ border:none;}
+body{     background: url(../Images/menu.jpg) no-repeat fixed top center;
+    background-size: cover;
+    font-family: Montserrat; text-align:center;
+}
+.page-banner{ width:100%; height:250px; overflow:hidden;}
+.main{ width:600px;}
+.main h1{ margin-top:50px;}
+
+.hedingtext{ font-size:50px; color:#fff; margin-top:50px; text-transform:uppercase; }
+
+/*.button{ margin-left:100px;}
+.button li{ list-style-type:none; text-align:center; width:160px; height:50px; float:left; position:relative; padding:40px 0; margin-right:20px; margin-bottom:20px;}
+
+
+li.btn1{ background:#005daa; border-top:30px solid #fff;color:#5491c8;}
+li.btn2{ background:#b20024; border-top:30px solid #fff;color:#ffffff;}
+
+
+.hedingtext{ font-size:50px; color:#fff; margin-top:200px; text-transform:uppercase; }
+li.btn1 .strtbutton{ width:100%; background: #005499 url(../Images/strt.png) no-repeat right; border:none; height:30px; position:absolute; left:0; bottom:0; cursor:pointer;}
+li.btn2 .closebutton{ width:100%; background: #9e0020 url(../Images/strt.png) no-repeat right; border:none; height:30px; position:absolute; left:0; bottom:0; cursor:pointer;}
+*/
+
+*/
+
+.button{ margin-top:50px;}
+.button li{ list-style-type:none; text-align:center}
+.cmd_button{ background:#333; border:none; padding:10px 10px; width:200px; margin-bottom:1px; color:#fff; cursor:pointer;}
+.cmd_button_white{ background:#005daa; border:none; padding:10px 10px; width:200px; margin-bottom:1px; color:#fff; cursor:pointer;}
+.cmd_button_green{ background:#b20024; border:none; padding:10px 10px; width:200px; margin-bottom:1px; color:#fff; cursor:pointer;}

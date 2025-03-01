@@ -1,0 +1,64 @@
+Proc_Get_stf_student_for_SectionAllotment ->View Student List
+Proc_Save_SectionAllotment
+Proc_Save_SectionAllotment_det
+
+
+Semester_Student_Relation
+
+
+
+update std_student_master set STD_STUDENT_MASTER_sRoutineSemId=STD_STUDENT_MASTER_nCurrSemesterId
+where STD_STUDENT_MASTER_nCurrSemesterId>STD_STUDENT_MASTER_sRoutineSemId
+
+===================
+
+
+/****** Object:  Table [dbo].[Semester_Student_Relation]    Script Date: 12/25/2017 07:24:07 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Semester_Student_Relation](
+	[Semester_Student_Relation_nStudentId] [int] NOT NULL,
+	[Semester_Student_Relation_nSemesterId] [int] NOT NULL,
+	[Semester_Student_Relation_nBatch] [int] NOT NULL,
+	[Semester_Student_Relation_nCourseId] [int] NOT NULL,
+	[Semester_Student_Relation_nStreamID] [int] NOT NULL,
+	[Semester_Student_Relation_nSection] [int] NOT NULL,
+	[Semester_Student_Relation_nIsBatchChange] [int] NULL,
+ CONSTRAINT [PK_Semester_Student_Relation] PRIMARY KEY CLUSTERED 
+(
+	[Semester_Student_Relation_nStudentId] ASC,
+	[Semester_Student_Relation_nSemesterId] ASC,
+	[Semester_Student_Relation_nBatch] ASC,
+	[Semester_Student_Relation_nCourseId] ASC,
+	[Semester_Student_Relation_nStreamID] ASC,
+	[Semester_Student_Relation_nSection] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nStudentId]  DEFAULT (0) FOR [Semester_Student_Relation_nStudentId]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nSemesterId]  DEFAULT (0) FOR [Semester_Student_Relation_nSemesterId]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nBatchId]  DEFAULT (0) FOR [Semester_Student_Relation_nBatch]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nsBatch1]  DEFAULT (0) FOR [Semester_Student_Relation_nCourseId]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nsBatch1_1]  DEFAULT (0) FOR [Semester_Student_Relation_nStreamID]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  CONSTRAINT [DF_Semester_Student_Relation_Semester_Student_Relation_nSection]  DEFAULT (0) FOR [Semester_Student_Relation_nSection]
+GO
+
+ALTER TABLE [dbo].[Semester_Student_Relation] ADD  DEFAULT ((0)) FOR [Semester_Student_Relation_nIsBatchChange]
+GO
+

@@ -1,0 +1,11 @@
+
+select * from Semester_Student_Relation
+where Semester_Student_Relation_nCourseId=9
+and Semester_Student_Relation_nSemesterId=26
+and Semester_Student_Relation_nSection=1
+and Semester_Student_Relation_nBatch=2014
+
+select * from Semester_Section_Group_Student_Relation
+where Semester_Section_Group_Student_Relation_nCourseId=9
+and Semester_Section_Group_Student_Relation_nBatch=2014
+and Semester_Section_Group_Student_Relation_nSemesterId=26

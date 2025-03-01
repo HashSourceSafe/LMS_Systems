@@ -1,0 +1,27 @@
+frmBatchCourseSemStreamWiseSection.aspx
+=========================================
+
+Proc_Get_Sem_Type
+Proc_Get_stf_Semester
+Proc_Get_stf_Section_Master
+Proc_Get_Batch_Course_Stream_Semester_Wise_Section
+Proc_Save_Batch_Course_Stream_Semester_Wise_Section
+
+STD_BATCH_COURSE_WISE_STREAM
+
+
+STD_STUDENT_BATCH_SEMESTER_VIEW
+
+
+alter table TIME_TABLE_TEMPLATE_DRAFT add
+TIME_TABLE_TEMPLATE_DRAFT_nAcaSess int default 0,
+TIME_TABLE_TEMPLATE_DRAFT_sRoomNo varchar(100),
+TIME_TABLE_TEMPLATE_DRAFT_nIsNew int default 1,
+TIME_TABLE_TEMPLATE_DRAFT_nCollegeId int default 0,
+TIME_TABLE_TEMPLATE_DRAFT_nIsActive int default 1
+
+
+alter table TIME_TABLE_TEMPLATE_FACULTY add 
+TIME_TABLE_TEMPLATE_FACULTY_nIsNew int default 1,
+TIME_TABLE_TEMPLATE_FACULTY_nCollegeId int default 0,
+TIME_TABLE_TEMPLATE_FACULTY_nIsActive int default 1
